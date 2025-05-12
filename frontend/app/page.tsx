@@ -7,7 +7,7 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
       <header className="border-b">
-        <div className="container flex items-center justify-between py-4">
+        <div className="container w-full max-w-[2000px]  flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-6 w-6 text-emerald-500" />
             <span className="text-xl font-bold">ChatReal</span>
@@ -25,7 +25,7 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="flex-1">
-        <div className="container flex flex-col items-center justify-center py-20 text-center md:py-32">
+        <div className="container w-full max-w-[2000px] flex flex-col items-center justify-center py-20 text-center md:py-32">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
             Comunicación en tiempo real
             <span className="text-emerald-500"> simplificada</span>
@@ -52,7 +52,7 @@ export default function Home() {
 
       {/* Features */}
       <section className="bg-gray-50 dark:bg-gray-900">
-        <div className="container py-20">
+        <div className="container w-ful max-w-[2000px] py-20">
           <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl mb-12">
             Características principales
           </h2>
@@ -118,9 +118,9 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t">
-        <div className="container py-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400">© 2025 ChatReal. Todos los derechos reservados.</p>
+      <footer className="  border-t">
+        <div className="containerw-ful max-w-[2000px] py-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400 ">© 2025 ChatReal. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
