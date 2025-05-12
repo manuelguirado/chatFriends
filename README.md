@@ -59,10 +59,9 @@ Para facilitar el desarrollo y la ejecución del proyecto, se han añadido scrip
 
 ```json
 "scripts": {
-    "start": "live-server",                 // Inicia un servidor local para desarrollo
-    "build": "webpack --mode production",   // Genera una versión optimizada del frontend
-    "lint": "eslint . --ext .js,.ts"        // Analiza el código en busca de errores
-}
+    "start": "live-server",                
+    "build": "webpack --mode production",  
+    "lint": "eslint . --ext .js,.ts"        
 ```
 
 ### Configuración de Entorno
