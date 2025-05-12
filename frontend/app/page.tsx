@@ -41,11 +41,7 @@ export default function Home() {
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/demo">
-              <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
-                Ver demo
-              </Button>
-            </Link>
+           
           </div>
         </div>
       </section>
