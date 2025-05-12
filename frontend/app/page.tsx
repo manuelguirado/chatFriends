@@ -10,7 +10,7 @@ export default function Home() {
         <div className="container w-full max-w-[2000px]  flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-6 w-6 text-emerald-500" />
-            <span className="text-xl font-bold">ChatReal</span>
+            <span className="text-xl font-bold">ChatFriendsl</span>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
@@ -31,7 +31,7 @@ export default function Home() {
             <span className="text-emerald-500"> simplificada</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-            ChatReal te permite conectar con tus amigos y familiares de forma instantánea. Mensajería rápida, segura y
+            ChatFriends te permite conectar con tus amigos y familiares de forma instantánea. Mensajería rápida, segura y
             fácil de usar, todo en una sola aplicación.
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
@@ -116,7 +116,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="  border-t">
         <div className="containerw-ful max-w-[2000px] py-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400 ">© 2025 ChatReal. Todos los derechos reservados.</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400 ">© 2025 ChatFriends. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
