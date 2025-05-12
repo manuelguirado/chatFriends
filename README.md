@@ -116,6 +116,8 @@ Para desplegar el proyecto en un entorno de producción, sigue estos pasos:
 
 Con estos pasos, el proyecto estará listo para ser utilizado en un entorno de producción.
 
+```plaintext
+```
 ```
 ## Frontend
 
@@ -140,4 +142,3 @@ frontend/
 ├── tailwind.config.ts        # Tailwind CSS configuration
 └── tsconfig.json             # TypeScript configuration
 ```
-

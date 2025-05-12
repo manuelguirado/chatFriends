@@ -14,7 +14,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-4">
             <Link href="/login">
-              <Button variant="ghost">Iniciar Sesión</Button>
+              <Button className="bg-transparent hover:bg-gray-100 text-gray-700">Iniciar Sesión</Button>
             </Link>
             <Link href="/register">
               <Button>Registrarse</Button>
@@ -36,13 +36,13 @@ export default function Home() {
           </p>
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <Link href="/register">
-              <Button size="lg" className="gap-2">
+              <Button className="gap-2">
                 Comenzar ahora
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/demo">
-              <Button size="lg" variant="outline">
+              <Button className="border border-gray-300 text-gray-700 hover:bg-gray-100">
                 Ver demo
               </Button>
             </Link>
