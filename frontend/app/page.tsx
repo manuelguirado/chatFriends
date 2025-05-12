@@ -6,14 +6,14 @@ export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
-      <header className="border-b">
-        <div className="container  w-vdw-full max-w-[5000px]  flex items-center justify-between py-4 md:w-full max-w-[800px] ">
+      <header className="border-b w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-6 w-6 text-emerald-500" />
             <span className="text-xl font-bold">ChatFriends</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login" className="w-vdw-full">
+            <Link href="/login">
               <Button className="bg-transparent hover:bg-gray-100 text-gray-700">Iniciar Sesión</Button>
             </Link>
             <Link href="/register">
@@ -24,8 +24,8 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="flex-1">
-        <div className="container w-full max-w-[2000px] flex flex-col items-center justify-center py-20 text-center md:py-32">
+      <section className="flex-1 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 flex flex-col items-center justify-center py-20 text-center md:py-32">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl">
             Comunicación en tiempo real
             <span className="text-emerald-500"> simplificada</span>
