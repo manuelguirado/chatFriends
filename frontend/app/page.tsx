@@ -7,13 +7,13 @@ export default function Home() {
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
       <header className="border-b">
-        <div className="container w-full max-w-[2000px]  flex items-center justify-between py-4">
+        <div className="container  w-vdw-full max-w-[5000px]  flex items-center justify-between py-4 md:w-full max-w-[800px] ">
           <div className="flex items-center gap-2">
             <MessageCircle className="h-6 w-6 text-emerald-500" />
-            <span className="text-xl font-bold">ChatFriendsl</span>
+            <span className="text-xl font-bold">ChatFriends</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login">
+            <Link href="/login" className="w-vdw-full">
               <Button className="bg-transparent hover:bg-gray-100 text-gray-700">Iniciar Sesión</Button>
             </Link>
             <Link href="/register">
