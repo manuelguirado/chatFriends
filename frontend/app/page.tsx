@@ -47,8 +47,8 @@ export default function Home() {
       </section>
 
       {/* Features */}
-      <section className="bg-gray-50 dark:bg-gray-900">
-        <div className="container w-ful max-w-[2000px] py-20">
+      <section className="bg-gray-50 dark:bg-gray-900 w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-20">
           <h2 className="text-center text-3xl font-bold tracking-tight sm:text-4xl mb-12">
             Características principales
           </h2>
@@ -114,9 +114,9 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="  border-t">
-        <div className="containerw-ful max-w-[2000px] py-6 text-center">
-          <p className="text-sm text-gray-600 dark:text-gray-400 ">© 2025 ChatFriends. Todos los derechos reservados.</p>
+      <footer className="border-t w-full">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-6 text-center">
+          <p className="text-sm text-gray-600 dark:text-gray-400">© 2025 ChatFriends. Todos los derechos reservados.</p>
         </div>
       </footer>
     </div>
