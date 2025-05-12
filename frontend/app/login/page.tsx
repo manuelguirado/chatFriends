@@ -64,7 +64,7 @@ export default function LoginPage() {
             variant="outline"
             className="w-full"
             onClick={() => {
-              // Lógica para iniciar sesión con Google
+                 
             }}
           >
             <svg
