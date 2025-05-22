@@ -1,7 +1,8 @@
 "use client"
+import { useSession, signIn } from "next-auth/react"
+import { useEffect } from "react"
 
-import type React from "react"
-
+import { checkUserCredentials } from "@/lib/db/services/validateLogin"
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -10,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageCircle } from "lucide-react"
 
+
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -17,8 +20,99 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     // Aquí iría la lógica de autenticación
+     getCredentials(e)
+  
+
     setTimeout(() => setIsLoading(false), 1000)
   }
+ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
+     e.preventDefault()
+ 
+        const emailInput = document.getElementById("email") as HTMLInputElement
+        const passwordInput = document.getElementById("password") as HTMLInputElement
+        const user = { email: emailInput.value, password: passwordInput.value }
+        console.log(user)
+        fetch("/api/login", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(user),
+        })
+          .then(async (res) => {
+            if (res.ok) {
+              const data = await res.json()
+              console.log("Usuario encontrado", data)
+               checkUserCredentials(user.email, user.password)
+            } else if (res.status === 404) {
+              console.log("El usuario no existe en la base de datos")
+            } else {
+              const data = await res.json()
+              console.error("Error al iniciar sesión:", data.message)
+            }
+          })
+          .catch((err) => {
+            console.error("Error de red al iniciar sesión:", err)
+          })
+       
+        const isValid = checkUserCredentials(user.email, user.password)
+         if ( await isValid){
+            console.log("Usuario válido")
+            // Aquí puedes redirigir al usuario a la página de chat
+            window.location.href = "/"          
+         }else{
+             window.location.href = "/login"
+             console.log("Usuario no válido")
+         }
+      
+ }
+  const handleGoogleSignIn = () => {
+    setIsLoading(true)
+ 
+    signIn("google", { 
+      callbackUrl: "/", // Cambia esto a la URL de tu aplicación
+      redirect: false // Explicitly set redirect to true
+    }).catch(error => {
+      console.error("Error:", error)
+  
+    })
+     setIsLoading(false)
+  }
+
+  const { data: session } = useSession()
+
+useEffect(() => {
+  if (session) {
+    const user = {
+      name: session.user?.name || "Google User",
+      email: session.user?.email || "sincorreo@google.com",
+      password: "google",
+    
+    }
+   fetch("api/login", {
+    method : "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(user)
+   })
+   .then(async (res) => {
+    if (res.status === 200) {
+      console.log("Usuario encontrado")
+    } else if (res.status === 404) {
+      console.log("Usuario no encontrado")
+    }
+   })
+   .catch((err) => {
+      console.error("Error de red al buscar usuario:", err)
+   });
+
+    checkUserCredentials(user.email, user.password)
+
+    console.log("Usuario de Google guardado")
+  }
+}, [session])
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
@@ -63,9 +157,8 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => {
-                 
-            }}
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <svg
               className="mr-2 h-4 w-4"

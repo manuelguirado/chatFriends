@@ -1,7 +1,10 @@
 "use client"
 
+import { useSession } from "next-auth/react"
+import { useEffect } from "react"
+import {saveUserToLocalStorage} from "@/lib/utils/saveUser"
 import type React from "react"
-
+import { signIn } from "next-auth/react"
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -10,15 +13,121 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageCircle } from "lucide-react"
 
+
 export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setIsLoading(true)
-    // Aquí iría la lógica de registro
-    setTimeout(() => setIsLoading(false), 1000)
+    const formData = new FormData(e.currentTarget)
+    const name = document.getElementById("name") as HTMLInputElement
+    const email = document.getElementById("email") as HTMLInputElement
+    const password = document.getElementById("password") as HTMLInputElement
+   
+
+    fetch("/api/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: name.value,
+        email: email.value,
+        password: password.value,
+      }),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json()
+          console.log("Usuario registrado correctamente", data)
+          saveUserToLocalStorage({
+            nombre: name.value,
+            email: email.value,
+            password: password.value,
+            oauthId: data.oauthId,
+            oauthProvider: data.oauthProvider,
+          })
+        } else if (res.status === 409) {
+          console.log("El usuario ya existe en la base de datos")
+        } else {
+          const data = await res.json()
+          console.error("Error al registrar usuario:", data.message)
+        }
+      }
+      ).catch((err) => {
+        console.error("Error de red al registrar usuario:", err)
+      }
+      )
   }
+
+const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  setIsLoading(true);
+  getCredentials(e);
+  window.location.href = "/"
+};
+
+const handleGoogleRegister = () => {
+  setIsLoading(true);
+
+  signIn("google", { 
+    callbackUrl: "/", // Cambia esto a la URL de tu aplicación
+  });
+};
+
+  const { data: session } = useSession()
+
+useEffect(() => {
+  if (session) {
+    const alreadySaved = localStorage.getItem("googleUserSaved");
+
+    if (alreadySaved === "true") {
+      console.log("Usuario ya guardado, no se vuelve a guardar");
+      return;
+    }
+
+    const user = {
+      name: session.user?.name || "Google User",
+      email: session.user?.email || "sincorreo@google.com",
+      password: "google",
+      oauthId: session.user?.email || "google",
+      oauthProvider: "google",
+    };
+
+    fetch("/api/register/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    })
+      .then(async (res) => {
+        if (res.ok) {
+          console.log("Usuario de Google registrado correctamente");
+          localStorage.setItem("googleUserSaved", "true"); // para no volver a guardar
+        } else if (res.status === 409) {
+          console.log("El usuario ya existe en la base de datos");
+          localStorage.setItem("googleUserSaved", "true"); // ya existe, pero igual marcamos
+        } else {
+          const data = await res.json();
+          console.error("Error al registrar usuario:", data.message);
+        }
+      })
+      .catch((err) => {
+        console.error("Error de red al registrar usuario:", err);
+      });
+
+    saveUserToLocalStorage({
+      nombre: user.name,
+      email: user.email,
+      password: user.password,
+      oauthId: user.oauthId,
+      oauthProvider: user.oauthProvider,
+    });
+  }
+}, [session]);
+
+
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
@@ -63,9 +172,8 @@ export default function RegisterPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => {
-              // Lógica para registrarse con Google
-            }}
+            onClick={handleGoogleRegister}
+            disabled={isLoading}
           >
             <svg
               className="mr-2 h-4 w-4"
@@ -97,3 +205,4 @@ export default function RegisterPage() {
     </div>
   )
 }
+
