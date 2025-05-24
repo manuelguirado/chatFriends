@@ -1,6 +1,7 @@
 "use client"
+import { useSession, signIn } from "next-auth/react"
+import { useEffect } from "react"
 
-import type React from "react"
 
 import { useState } from "react"
 import Link from "next/link"
@@ -10,6 +11,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { MessageCircle } from "lucide-react"
 
+
+
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
@@ -17,8 +20,96 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
     // Aquí iría la lógica de autenticación
-    setTimeout(() => setIsLoading(false), 1000)
+     getCredentials(e)
+  
+    setIsLoading(false)
   }
+const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const emailInput = document.getElementById("email") as HTMLInputElement;
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const user = { email: emailInput.value, password: passwordInput.value };
+
+  if (!user.email || !user.password) {
+    alert("Por favor, rellena todos los campos.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST", // ✅ debe ser POST
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      console.log("Usuario válido", data);
+      window.location.href = "/"; // ✅ o la página que corresponda
+    } else {
+      console.error("Error al iniciar sesión:");
+      alert(data.message || "Credenciales incorrectas");
+    }
+  } catch (err) {
+    console.error("Error de red:", err);
+    alert("Error al conectar con el servidor.");
+  }
+};
+ 
+      
+      
+  const handleGoogleSignIn = () => {
+    setIsLoading(true)
+ 
+    signIn("google", { 
+      callbackUrl: "/", // Cambia esto a la URL de tu aplicación
+      redirect: false // Explicitly set redirect to true
+    }).catch(error => {
+      console.error("Error:", error)
+  
+    })
+     setIsLoading(false)
+  }
+
+  const { data: session } = useSession()
+
+useEffect(() => {
+  if (session) {
+    window.location.href = "/chat"
+    const user = {
+      name: session.user?.name || "Google User",
+      email: session.user?.email || "sincorreo@google.com",
+      password: "google",
+    
+    }
+   fetch("api/login", {
+    method : "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(user)
+   })
+   .then(async (res) => {
+    if (res.status === 200) {
+      console.log("Usuario encontrado")
+    } else if (res.status === 404) {
+      console.log("Usuario no encontrado")
+    }
+   })
+   .catch((err) => {
+      console.error("Error de red al buscar usuario:", err)
+   });
+
+  
+
+    console.log("Usuario de Google guardado")
+  }
+}, [session])
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
@@ -63,9 +154,8 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="w-full"
-            onClick={() => {
-                 
-            }}
+            onClick={handleGoogleSignIn}
+            disabled={isLoading}
           >
             <svg
               className="mr-2 h-4 w-4"
@@ -97,3 +187,4 @@ export default function LoginPage() {
     </div>
   )
 }
+
