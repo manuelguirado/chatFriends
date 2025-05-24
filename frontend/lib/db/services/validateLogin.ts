@@ -1,7 +1,8 @@
 
-import { connectDatabase } from "../connectDatabase";
+import { connectDatabase } from "@/connectDatabase"
 import { User, oauthUser, normalUser, user } from "../models/user";
 import { verifyPassword } from "@/lib/db/hash/hash";
+
 
 
 
@@ -36,10 +37,5 @@ export const checkUserCredentials = async (email: string, password: string) => {
       return { success: false, message: "Contraseña incorrecta" };
     }
     return { success: true, user: userFound };
-  } else {
-    return {
-      success: false,
-      message: "Este usuario solo puede iniciar sesión con Google",
-    };
-  }
+  } 
 };

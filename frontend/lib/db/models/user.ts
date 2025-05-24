@@ -1,4 +1,4 @@
-import { connectDatabase } from "../connectDatabase";
+
 import mongoose  from "mongoose";
 import {hashPassword} from "../hash/hash";
  export type oauthUser = {
@@ -48,4 +48,6 @@ userSchema.pre("save", async function (next) {
     }
     next();
 });
-export const User =  mongoose.models.User || mongoose.model<user>('User', userSchema);
+export const User = mongoose.models.User || mongoose.model<user>('User', userSchema);
+
+

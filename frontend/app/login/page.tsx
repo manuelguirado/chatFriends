@@ -2,7 +2,7 @@
 import { useSession, signIn } from "next-auth/react"
 import { useEffect } from "react"
 
-import { checkUserCredentials } from "@/lib/db/services/validateLogin"
+
 import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -22,50 +22,46 @@ export default function LoginPage() {
     // Aquí iría la lógica de autenticación
      getCredentials(e)
   
-
-    setTimeout(() => setIsLoading(false), 1000)
+    setIsLoading(false)
   }
- const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
-     e.preventDefault()
+const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+
+  const emailInput = document.getElementById("email") as HTMLInputElement;
+  const passwordInput = document.getElementById("password") as HTMLInputElement;
+  const user = { email: emailInput.value, password: passwordInput.value };
+
+  if (!user.email || !user.password) {
+    alert("Por favor, rellena todos los campos.");
+    return;
+  }
+
+  try {
+    const res = await fetch("/api/login", {
+      method: "POST", // ✅ debe ser POST
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      console.log("Usuario válido", data);
+      window.location.href = "/"; // ✅ o la página que corresponda
+    } else {
+      console.error("Error al iniciar sesión:");
+      alert(data.message || "Credenciales incorrectas");
+    }
+  } catch (err) {
+    console.error("Error de red:", err);
+    alert("Error al conectar con el servidor.");
+  }
+};
  
-        const emailInput = document.getElementById("email") as HTMLInputElement
-        const passwordInput = document.getElementById("password") as HTMLInputElement
-        const user = { email: emailInput.value, password: passwordInput.value }
-        console.log(user)
-        fetch("/api/login", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(user),
-        })
-          .then(async (res) => {
-            if (res.ok) {
-              const data = await res.json()
-              console.log("Usuario encontrado", data)
-               checkUserCredentials(user.email, user.password)
-            } else if (res.status === 404) {
-              console.log("El usuario no existe en la base de datos")
-            } else {
-              const data = await res.json()
-              console.error("Error al iniciar sesión:", data.message)
-            }
-          })
-          .catch((err) => {
-            console.error("Error de red al iniciar sesión:", err)
-          })
-       
-        const isValid = checkUserCredentials(user.email, user.password)
-         if ( await isValid){
-            console.log("Usuario válido")
-            // Aquí puedes redirigir al usuario a la página de chat
-            window.location.href = "/"          
-         }else{
-             window.location.href = "/login"
-             console.log("Usuario no válido")
-         }
       
- }
+      
   const handleGoogleSignIn = () => {
     setIsLoading(true)
  
@@ -83,6 +79,7 @@ export default function LoginPage() {
 
 useEffect(() => {
   if (session) {
+    window.location.href = "/chat"
     const user = {
       name: session.user?.name || "Google User",
       email: session.user?.email || "sincorreo@google.com",
@@ -107,7 +104,7 @@ useEffect(() => {
       console.error("Error de red al buscar usuario:", err)
    });
 
-    checkUserCredentials(user.email, user.password)
+  
 
     console.log("Usuario de Google guardado")
   }
@@ -190,3 +187,4 @@ useEffect(() => {
     </div>
   )
 }
+

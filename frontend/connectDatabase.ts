@@ -26,4 +26,3 @@ export const connectDatabase = async () => {
   }
 };
 
-connectDatabase();

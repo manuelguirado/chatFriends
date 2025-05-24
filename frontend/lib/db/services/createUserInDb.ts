@@ -1,4 +1,4 @@
-import { connectDatabase } from "../connectDatabase";
+import { connectDatabase } from "@/connectDatabase";
 
 import mongoose from "mongoose";
 import { verifyPassword } from "@/lib/db/hash/hash";
