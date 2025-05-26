@@ -1,3 +1,9 @@
-[{"name":"generate-buildid","duration":186,"timestamp":6556888400,"id":4,"parentId":1,"tags":{},"startTime":1748078108067,"traceId":"3e2043de9597488e"},{"name":"load-custom-routes","duration":435,"timestamp":6556888673,"id":5,"parentId":1,"tags":{},"startTime":1748078108068,"traceId":"3e2043de9597488e"},{"name":"next-build","duration":99557,"timestamp":6556791736,"id":1,"tags":{"buildMode":"default","isTurboBuild":"false","version":"15.3.2"},"startTime":1748078107971,"traceId":"3e2043de9597488e"}]
-[{"name":"next-dev","duration":615486,"timestamp":6843348917,"id":1,"tags":{},"startTime":1748078394528,"traceId":"7db3038fb2f09d3c"}]
-[{"name":"generate-buildid","duration":203,"timestamp":17429776507,"id":4,"parentId":1,"tags":{},"startTime":1748259802627,"traceId":"3bb7120deb47ec49"},{"name":"load-custom-routes","duration":326,"timestamp":17429776802,"id":5,"parentId":1,"tags":{},"startTime":1748259802627,"traceId":"3bb7120deb47ec49"},{"name":"next-build","duration":115697,"timestamp":17429666160,"id":1,"tags":{"buildMode":"default","isTurboBuild":"false","version":"15.3.2"},"startTime":1748259802516,"traceId":"3bb7120deb47ec49"}]
+[
+  {"name":"generate-buildid","duration":186,"timestamp":6556888400,"id":4,"parentId":1,"tags":{},"startTime":1748078108067,"traceId":"3e2043de9597488e"},
+  {"name":"load-custom-routes","duration":435,"timestamp":6556888673,"id":5,"parentId":1,"tags":{},"startTime":1748078108068,"traceId":"3e2043de9597488e"},
+  {"name":"next-build","duration":99557,"timestamp":6556791736,"id":1,"tags":{"buildMode":"default","isTurboBuild":"false","version":"15.3.2"},"startTime":1748078107971,"traceId":"3e2043de9597488e"},
+  {"name":"next-dev","duration":615486,"timestamp":6843348917,"id":1,"tags":{},"startTime":1748078394528,"traceId":"7db3038fb2f09d3c"},
+  {"name":"generate-buildid","duration":203,"timestamp":17429776507,"id":4,"parentId":1,"tags":{},"startTime":1748259802627,"traceId":"3bb7120deb47ec49"},
+  {"name":"load-custom-routes","duration":326,"timestamp":17429776802,"id":5,"parentId":1,"tags":{},"startTime":1748259802627,"traceId":"3bb7120deb47ec49"},
+  {"name":"next-build","duration":115697,"timestamp":17429666160,"id":1,"tags":{"buildMode":"default","isTurboBuild":"false","version":"15.3.2"},"startTime":1748259802516,"traceId":"3bb7120deb47ec49"}
+]
