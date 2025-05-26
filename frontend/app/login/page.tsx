@@ -49,7 +49,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
 
     if (res.ok && data.success) {
       console.log("Usuario válido", data);
-      window.location.href = "/"; // ✅ o la página que corresponda
+      window.location.href = "/chat"; // ✅ o la página que corresponda
     } else {
       console.error("Error al iniciar sesión:");
       alert(data.message || "Credenciales incorrectas");
