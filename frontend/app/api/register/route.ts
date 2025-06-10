@@ -16,7 +16,6 @@ export async function POST(request: Request) {
       _id: newUser._id,
       name: newUser.name,
       email: newUser.email,
-      password: password,
       oauthId: oauthId,
       oauthProvider: oauthProvider,
     }, { status: 201 });

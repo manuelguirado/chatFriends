@@ -49,7 +49,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
 
     if (res.ok && data.success) {
       console.log("Usuario válido", data);
-      window.location.href = "/chat"; // ✅ o la página que corresponda
+      window.location.href = "/chat"; 
     } else {
       console.error("Error al iniciar sesión:");
       alert(data.message || "Credenciales incorrectas");
@@ -66,7 +66,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
     setIsLoading(true)
  
     signIn("google", { 
-      callbackUrl: "/", // Cambia esto a la URL de tu aplicación
+      callbackUrl: "/chat", // Cambia esto a la URL de tu aplicación
       redirect: false // Explicitly set redirect to true
     }).catch(error => {
       console.error("Error:", error)
