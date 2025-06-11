@@ -1,6 +1,6 @@
 import { Message } from "../models/messages";
 
-function updateReadby(readyBy : string[], userId: string): string[] {
+function updateReadby(chatID: string, readyBy: string[], idUser: string | undefined, userId: string): string[] {
     // Check if the userId is already in the readyBy array
     if (readyBy.includes(userId)) {
         // If it is, remove it
@@ -20,4 +20,10 @@ async function recoverChatMessages(chatID: string) {
         throw new Error("Error al recuperar los mensajes del chat");
     }
 }
-export { updateReadby, recoverChatMessages };
+function saveMessageTolocalStorage(message: string): void {
+  const messages = JSON.parse(localStorage.getItem('messages') || '[]');
+  messages.push(message);
+  localStorage.setItem('messages', JSON.stringify(messages));
+}
+
+export { saveMessageTolocalStorage, recoverChatMessages, updateReadby };
