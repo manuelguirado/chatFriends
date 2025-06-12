@@ -8,6 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
 
+import { use } from "passport"
+import socket from "../api/socket/socket"
+
+
+
 interface Message {
   id: string
   content: string
@@ -16,65 +21,29 @@ interface Message {
 }
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "¡Hola! ¿Cómo estás?",
-      sender: "contact",
-      timestamp: new Date(Date.now() - 1000 * 60 * 5),
-    },
-    {
-      id: "2",
-      content: "¡Muy bien! ¿Y tú?",
-      sender: "user",
-      timestamp: new Date(Date.now() - 1000 * 60 * 4),
-    },
-    {
-      id: "3",
-      content: "Todo perfecto. ¿Qué planes tienes para hoy?",
-      sender: "contact",
-      timestamp: new Date(Date.now() - 1000 * 60 * 3),
-    },
-  ])
+ 
+ 
+const [messages, setMessages] = useState<Message[]>([])
+const [newMessage, setNewMessage] = useState("")
+const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-  const [newMessage, setNewMessage] = useState("")
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+useEffect(() => {
+  socket.on("message", (message: Message) => {
+    setMessages((prev) => [...prev, message])
+  })
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  return () => {
+    socket.off("message")
   }
+}, [])
 
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!newMessage.trim()) return
-
-    // Añadir mensaje del usuario
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender: "user",
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setNewMessage("")
-
-    // Simular respuesta (en una app real, esto vendría del backend)
-    setTimeout(() => {
-      const contactMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "¡Gracias por tu mensaje! Te responderé pronto.",
-        sender: "contact",
-        timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, contactMessage])
-    }, 1000)
-  }
+function handleSendMessage(e: React.FormEvent) {
+  e.preventDefault()
+  if (newMessage.trim() === "") return
+  socket.emit("message", newMessage)
+  setNewMessage("")
+}
+ 
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })

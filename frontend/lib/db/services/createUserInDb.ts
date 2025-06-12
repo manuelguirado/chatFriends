@@ -1,9 +1,10 @@
+
 import { connectDatabase } from "@/connectDatabase";
 
 import mongoose from "mongoose";
 import { verifyPassword } from "@/lib/db/hash/hash";
 import { findUserByEmail } from "./validateLogin";
-import { User } from "../models/user"; // Adjusted path to match the actual file name
+import { BaseUser,OAuthUser } from "../models/user";
 
 
 export const createUserInDb = async (userData: {
@@ -15,24 +16,32 @@ export const createUserInDb = async (userData: {
 }) => {
   await connectDatabase();
   const { name, email, password, oauthId, oauthProvider } = userData;
-
-
-const newUser = new User({
-  _id: new mongoose.Types.ObjectId(),
-  name,
-  email,
-  password: oauthProvider ? undefined : password, // si es OAuth no guarda password
-  oauthId,
-  oauthProvider,
-});
-
-  try {
-    const savedUser = await newUser.save();
-    return savedUser;
-  } catch (error) {
-    console.error("Error al guardar el usuario:", error);
-    throw error;
+  // Verificar si el usuario ya existe
+  const existingUser = await findUserByEmail(email);
+  if (existingUser) {
+    throw new Error("El usuario ya existe");
   }
+  // Crear un nuevo usuario
+  let newUser;
+  if (oauthId && oauthProvider) {
+    // Crear un usuario OAuth
+    newUser = new OAuthUser({
+      username: name,
+      email,
+      oauthId,
+      oauthProvider,
+    });
+  } else {
+    // Crear un usuario normal    
+    newUser = new BaseUser({
+      username: name,
+      email,
+      password, // La contraseña se hasheará en el pre-save hook
+    });
+  }
+
+  await newUser.save();
+  return newUser;
 };
 
 export const checkUserCredentials = async (email: string, password: string) => {
