@@ -1,21 +1,20 @@
-import mongoose, { Schema, Model, Document } from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 import { hashPassword } from "../hash/hash";
 
 // --- Interfaces ---
-
-interface IBaseUser extends Document {
+export interface IBaseUser extends Document {
   username: string;
   email: string;
   password?: string; // opcional por si es OAuth
 }
 
-interface IOAuthUser extends IBaseUser {
+export interface IOAuthUser extends IBaseUser {
   oauthId: string;
   oauthProvider: string;
+  profilePicture?: string; // opcional, puede ser útil para OAuth
 }
 
 // --- Schema base ---
-
 const baseUserSchema = new Schema<IBaseUser>(
   {
     username: { type: String, required: true },
@@ -43,6 +42,7 @@ const OAuthUser = BaseUser.discriminator<IOAuthUser>(
   new Schema<IOAuthUser>({
     oauthId: { type: String, required: true },
     oauthProvider: { type: String, required: true },
+    profilePicture: { type: String }, // Opcional
   })
 );
 
