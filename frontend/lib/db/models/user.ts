@@ -9,6 +9,7 @@ export interface IBaseUser extends Document {
 }
 
 export interface IOAuthUser extends IBaseUser {
+  name: string; // nombre del usuario, requerido para OAuth
   oauthId: string;
   oauthProvider: string;
   profilePicture?: string; // opcional, puede ser útil para OAuth
@@ -34,17 +35,28 @@ baseUserSchema.pre("save", async function (next) {
 });
 
 // --- Modelo base ---
-const BaseUser = mongoose.models.BaseUser || mongoose.model<IBaseUser>("BaseUser", baseUserSchema);
+const BaseUser =
+  mongoose.models.BaseUser ||
+  mongoose.model<IBaseUser>("BaseUser", baseUserSchema);
+
 
 // --- Discriminador para usuarios OAuth ---
-const OAuthUser = BaseUser.discriminator<IOAuthUser>(
-  "OAuthUser",
-  new Schema<IOAuthUser>({
-    oauthId: { type: String, required: true },
-    oauthProvider: { type: String, required: true },
-    profilePicture: { type: String }, // Opcional
-  })
-);
+let OAuthUser: mongoose.Model<IOAuthUser>;
+
+if (BaseUser.discriminators?.OAuthUser) {
+  OAuthUser = BaseUser.discriminators.OAuthUser as mongoose.Model<IOAuthUser>;
+} else {
+  OAuthUser = BaseUser.discriminator<IOAuthUser>(
+    "OAuthUser",
+    new Schema<IOAuthUser>({
+      name: { type: String, required: true },
+      oauthId: { type: String, required: true },
+      oauthProvider: { type: String, required: true },
+      profilePicture: { type: String },
+    })
+  );
+}
+
 
 // --- Exportación ---
 export { BaseUser, OAuthUser };

@@ -14,12 +14,13 @@ async function handleUserByEmail(email: string) {
     }
 
     const { user, type } = searchByEmail;
-    const userInfo = selectUserInfo(user);
-
+    const userInfo = selectUserInfo(user); 
+    
     if (type === "user") {
-      return { User: userInfo };
+      const { username } = userInfo;
+      return { username };
     } else if (type === "oauth") {
-      return { OAuthUser: userInfo };
+      return { username: userInfo.username, profilePicture: userInfo.profilePicture };
     } else {
       return { error: "Unknown user type" };
     }

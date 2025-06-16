@@ -1,17 +1,11 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
-
-import { use } from "passport"
 import socket from "../api/socket/socket"
-
-
 
 interface Message {
   id: string
@@ -21,32 +15,55 @@ interface Message {
 }
 
 export default function ChatPage() {
- 
- 
-const [messages, setMessages] = useState<Message[]>([])
-const [newMessage, setNewMessage] = useState("")
-const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [newMessage, setNewMessage] = useState("")
+  const [username, setUsername] = useState("")
+  const [profilePicture, setProfilePicture] = useState("")
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
-useEffect(() => {
-  socket.on("message", (message: Message) => {
-    setMessages((prev) => [...prev, message])
-  })
+  // Obtener datos del usuario
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch("/api/user") // puedes añadir ?email= si es necesario
+        const data = await res.json()
 
-  return () => {
-    socket.off("message")
+        if (res.ok) {
+          setUsername(data.username)
+          if (data.profilePicture) {
+            setProfilePicture(data.profilePicture)
+          }
+        } else {
+          console.error("Error al obtener datos del usuario:", data.error)
+        }
+      } catch (err) {
+        console.error("Error al hacer fetch:", err)
+      }
+    }
+
+    fetchUserData()
+  }, [])
+
+  // Socket.io para recibir mensajes
+  useEffect(() => {
+    socket.on("message", (message: Message) => {
+      setMessages((prev) => [...prev, message])
+    })
+
+    return () => {
+      socket.off("message")
+    }
+  }, [])
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (newMessage.trim() === "") return
+    socket.emit("message", newMessage)
+    setNewMessage("")
   }
-}, [])
-
-function handleSendMessage(e: React.FormEvent) {
-  e.preventDefault()
-  if (newMessage.trim() === "") return
-  socket.emit("message", newMessage)
-  setNewMessage("")
-}
- 
 
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
 
   return (
@@ -54,11 +71,11 @@ function handleSendMessage(e: React.FormEvent) {
       {/* Header */}
       <header className="border-b p-4 flex items-center">
         <Avatar className="h-10 w-10 mr-3">
-          <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Contact" />
-          <AvatarFallback>CN</AvatarFallback>
+          <AvatarImage src={profilePicture || "/placeholder.svg"} alt="Profile" />
+          <AvatarFallback>{username.slice(0, 2).toUpperCase() || "CN"}</AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="font-semibold">Ana García</h2>
+          <h2 className="font-semibold">{username}</h2>
           <p className="text-xs text-gray-500">En línea</p>
         </div>
       </header>

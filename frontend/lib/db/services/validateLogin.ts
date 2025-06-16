@@ -1,6 +1,6 @@
 import { connectDatabase } from "@/connectDatabase";
 import { BaseUser, OAuthUser } from "../models/user";
-import type { Document } from "mongoose";
+
 import { verifyPassword } from "@/lib/db/hash/hash";
 
 export const findUserByEmail = async (email: string) => {
@@ -8,6 +8,8 @@ export const findUserByEmail = async (email: string) => {
     await connectDatabase();
 
     const normalUser = await BaseUser.findOne({ email });
+    console.log("Normal user found:", normalUser);
+    console.log("email :", email);
     if (normalUser) return { type: "user", user: normalUser };
 
     // Busca en la colección de usuarios OAuth
@@ -22,6 +24,14 @@ export const findUserByEmail = async (email: string) => {
 
 export const checkUserCredentials = async (email: string, password: string) => {
   const userFound = await findUserByEmail(email);
+  console.log("password received in checkUserCredentials:", password)
+  console.log ("email received in checkUserCredentials:", email);
+  console.log("User found in checkUserCredentials:", userFound);
+  if (!userFound) {
+    return { success: false, message: "Usuario no encontrado" };
+  } else {
+    console.log("User found:", userFound);
+  }
 
   if (!userFound) {
     return { success: false, message: "Usuario no encontrado" };
@@ -32,9 +42,11 @@ export const checkUserCredentials = async (email: string, password: string) => {
       password,
       (userFound as { password: string }).password
     );
+    console.log("Password verification result:", isValid);
     if (!isValid) {
       return { success: false, message: "Contraseña incorrecta" };
     }
     return { success: true, user: userFound };
   }
+  return { success: false, message: "Usuario no tiene contraseña" };
 };
