@@ -37,10 +37,10 @@ export const checkUserCredentials = async (email: string, password: string) => {
     return { success: false, message: "Usuario no encontrado" };
   }
 
-  if ("password" in userFound && userFound.password) {
+  if (userFound.type === "user" && userFound.user.password) {
     const isValid = await verifyPassword(
       password,
-      (userFound as { password: string }).password
+      userFound.user.password
     );
     console.log("Password verification result:", isValid);
     if (!isValid) {

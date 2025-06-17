@@ -1,20 +1,24 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
+import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
 import socket from "../api/socket/socket"
 
+
 interface Message {
   id: string
   content: string
   sender: "user" | "contact"
   timestamp: Date
+
 }
 
 export default function ChatPage() {
+   const { data: session, status } = useSession()
   const [messages, setMessages] = useState<Message[]>([])
   const [newMessage, setNewMessage] = useState("")
   const [username, setUsername] = useState("")
@@ -22,27 +26,45 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   // Obtener datos del usuario
-  useEffect(() => {
+ useEffect(() => {
+  console.log("useEffect: status=", status, "email=", session?.user?.email);
+  if (status === "authenticated" && session?.user?.email) {
     const fetchUserData = async () => {
+      console.log("fetchUserData ejecutado");
       try {
-        const res = await fetch("/api/user") // puedes añadir ?email= si es necesario
-        const data = await res.json()
+        const res = await fetch("/api/user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: session.user?.email }),
+        });
+        console.log("fetch respuesta", res);
 
-        if (res.ok) {
-          setUsername(data.username)
-          if (data.profilePicture) {
-            setProfilePicture(data.profilePicture)
-          }
-        } else {
-          console.error("Error al obtener datos del usuario:", data.error)
+        if (res.status === 400) {
+          console.error("Error 400: Bad request");
+          return;
+        }
+
+        const data = await res.json();
+        if (!res.ok) {
+          console.error("Error:", data.error);
+          return;
+        }
+
+        setUsername(data.username);
+        if (data.profilePicture) {
+          setProfilePicture(data.profilePicture);
         }
       } catch (err) {
-        console.error("Error al hacer fetch:", err)
+        console.error("Error al hacer fetch:", err);
       }
-    }
+    };
 
-    fetchUserData()
-  }, [])
+    fetchUserData();
+  }
+}, [session, status]);
+
 
   // Socket.io para recibir mensajes
   useEffect(() => {

@@ -1,7 +1,6 @@
-import { findUserByEmail } from "../db/services/validateLogin";
-import { connectDatabase } from "@/connectDatabase";
+
 import type { IBaseUser, IOAuthUser } from "@/lib/db/models/user";
-import { profile } from "console";
+
 
 // Type guard to check if a user is an OAuth user
 function isOAuthUser(user: IBaseUser | IOAuthUser): user is IOAuthUser {
