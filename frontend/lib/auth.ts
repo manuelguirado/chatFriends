@@ -1,5 +1,4 @@
 
-import { register } from "module";
 import GoogleProvider from "next-auth/providers/google";
 
 export const authOptions  = {

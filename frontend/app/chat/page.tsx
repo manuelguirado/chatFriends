@@ -24,6 +24,7 @@ export default function ChatPage() {
   const [username, setUsername] = useState("")
   const [profilePicture, setProfilePicture] = useState("")
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  console.log("ChatPage renderizado, session:", session, "status:", status)
 
   // Obtener datos del usuario
  useEffect(() => {
@@ -94,7 +95,7 @@ export default function ChatPage() {
       <header className="border-b p-4 flex items-center">
         <Avatar className="h-10 w-10 mr-3">
           <AvatarImage src={profilePicture || "/placeholder.svg"} alt="Profile" />
-          <AvatarFallback>{username.slice(0, 2).toUpperCase() || "CN"}</AvatarFallback>
+          <AvatarFallback></AvatarFallback>
         </Avatar>
         <div>
           <h2 className="font-semibold">{username}</h2>

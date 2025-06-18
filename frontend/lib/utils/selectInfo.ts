@@ -8,24 +8,23 @@ function isOAuthUser(user: IBaseUser | IOAuthUser): user is IOAuthUser {
 }
 
 function selectUserInfo(user: IBaseUser | IOAuthUser) {
-    if (!isOAuthUser(user)) {
-        return {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            password: user.password, // Incluye la contraseña solo si es un usuario normal
-           
-        };
-    } else {
-        return {
-            id: user._id,
-            username: user.username,
-            email: user.email,
-            oauthId: user.oauthId,
-            oauthProvider: user.oauthProvider,
-            profilePicture: user.profilePicture, // Incluye la imagen de perfil si es un usuario OAuth
-        };
-    }
-
+  if (!isOAuthUser(user)) {
+    return {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      password: user.password,
+    };
+  } else {
+    return {
+      id: user._id,
+      username: user.name,  // <-- aquí usamos name
+      email: user.email,
+      oauthId: user.oauthId,
+      oauthProvider: user.oauthProvider,
+      profilePicture: user.profilePicture,
+    };
+  }
 }
+
 export { selectUserInfo };

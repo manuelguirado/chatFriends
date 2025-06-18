@@ -8,6 +8,7 @@ export interface IBaseUser extends Document {
   password?: string; // opcional por si es OAuth
 }
 
+
 export interface IOAuthUser extends IBaseUser {
   name: string; // nombre del usuario, requerido para OAuth
   oauthId: string;

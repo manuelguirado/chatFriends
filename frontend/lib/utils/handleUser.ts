@@ -9,12 +9,14 @@ async function handleUserByEmail(email: string) {
     console.log("Connected to the database");
 
     const searchByEmail = await findUserByEmail(email);
+    console.log("User found by email:", searchByEmail);
     if (!searchByEmail) {
       return { error: "User not found" };
     }
 
     const { user, type } = searchByEmail;
     const userInfo = selectUserInfo(user); 
+    console.log("Selected user info:", userInfo);
     
     if (type === "user") {
       const { username } = userInfo;
