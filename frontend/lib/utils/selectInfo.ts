@@ -15,16 +15,20 @@ function selectUserInfo(user: IBaseUser | IOAuthUser) {
       email: user.email,
       password: user.password,
     };
+
   } else {
     return {
       id: user._id,
-      username: user.name,  // <-- aquí usamos name
+      username: user.username ??  user.name,  // <-- aquí usamos name
       email: user.email,
       oauthId: user.oauthId,
       oauthProvider: user.oauthProvider,
       profilePicture: user.profilePicture,
     };
   }
-}
+
+  }
+
+
 
 export { selectUserInfo };

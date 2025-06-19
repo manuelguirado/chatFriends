@@ -20,9 +20,9 @@ async function handleUserByEmail(email: string) {
     
     if (type === "user") {
       const { username } = userInfo;
-      return { username };
+      return { email };
     } else if (type === "oauth") {
-      return { username: userInfo.username, profilePicture: userInfo.profilePicture };
+      return { email, profilePicture: userInfo.profilePicture };
     } else {
       return { error: "Unknown user type" };
     }

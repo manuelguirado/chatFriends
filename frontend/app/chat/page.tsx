@@ -98,7 +98,7 @@ export default function ChatPage() {
           <AvatarFallback></AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="font-semibold">{username}</h2>
+          <h2 className="font-semibold">{session?.user?.name ?? "Usuario"}</h2>
           <p className="text-xs text-gray-500">En línea</p>
         </div>
       </header>
