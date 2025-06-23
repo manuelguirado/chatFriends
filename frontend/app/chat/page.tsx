@@ -26,8 +26,18 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   console.log("ChatPage renderizado, session:", session, "status:", status)
 
-  // Obtener datos del usuario
- useEffect(() => {
+// Obtener datos del usuario
+useEffect(() => {
+  const checkSession = async () => {
+    const res = await fetch("/api/auth/session");
+    const data = await res.json();
+    console.log("🔍 /api/auth/session:", data);
+  };
+
+  checkSession();
+}, []);
+
+useEffect(() => {
   console.log("useEffect: status=", status, "email=", session?.user?.email);
   if (status === "authenticated" && session?.user?.email) {
     const fetchUserData = async () => {

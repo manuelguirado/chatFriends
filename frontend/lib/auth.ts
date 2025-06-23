@@ -2,6 +2,18 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { checkUserCredentials } from "@/lib/db/services/validateLogin";
 import { NextAuthOptions } from "next-auth";
+import { Session } from "next-auth";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    }
+  }
+}
 
 interface IUser {
   _id: { toString(): string };
@@ -31,11 +43,12 @@ export const authOptions: NextAuthOptions = {
         const user = result.user as unknown as IUser;
         if (!user) return null;
 
-        return {
-          id: user._id.toString(),
-          email: user.email || credentials.email,
-          name: user.username || '',
-        };
+      console.log("User found:", user);
+   return {
+      id: user._id.toString(),
+    email: user.email || credentials.email,
+   name: user.username || '',
+};
       },
     }),
   ],
@@ -48,7 +61,7 @@ callbacks: {
     }
     return token;
   },
-  async session({ session, token }) {
+  async session({ session, token }: { session: Session, token: any }) {
     if (token?.id && session.user) {
       session.user.id = token.id;
       session.user.name = token.name || session.user.name;
@@ -61,7 +74,7 @@ callbacks: {
   pages: {
     signIn: "/login",
     error: "/error/auth",
-    // Si tienes página propia para registro, solo hazla aparte sin ponerla aquí.
+   
   },
 };
 
