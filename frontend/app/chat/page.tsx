@@ -39,6 +39,11 @@ useEffect(() => {
 
 useEffect(() => {
   console.log("useEffect: status=", status, "email=", session?.user?.email);
+  if (!session && status === "unauthenticated") {
+    console.log("No hay sesión activa, redirigiendo a /login");
+    window.location.href = "/login";
+    return;
+  }
   if (status === "authenticated" && session?.user?.email) {
     const fetchUserData = async () => {
       console.log("fetchUserData ejecutado");

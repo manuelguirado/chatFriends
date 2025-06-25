@@ -34,22 +34,24 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+   async authorize(credentials) {
+  if (!credentials?.email || !credentials?.password) return null;
 
-        const result = await checkUserCredentials(credentials.email, credentials.password);
-        if (!result) return null;
+  const result = await checkUserCredentials(credentials.email, credentials.password);
 
-        const user = result.user as unknown as IUser;
-        if (!user) return null;
 
-      console.log("User found:", user);
-   return {
-      id: user._id.toString(),
-    email: user.email || credentials.email,
-   name: user.username || '',
-};
-      },
+  if (!result?.success || !result.user) return null;
+
+  // ✅ Extraemos el usuario real correctamente
+  const realUser = result.user.user; // 👈 esto es el objeto del usuario
+
+  return {
+    id: realUser._id.toString(),
+    email: realUser.email,
+    name: realUser.username,
+  };
+}
+
     }),
   ],
 
