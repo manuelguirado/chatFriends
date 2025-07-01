@@ -44,7 +44,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
     redirect: true,
     email: user.email,
     password: user.password,
-    callbackUrl: "/chat", // Cambia esto a la URL de tu aplicación
+    callbackUrl: "/dashboard", // Cambia esto a la URL de tu aplicación
   });
   } catch (err) {
     console.error("Error de red:", err);
@@ -56,9 +56,9 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
       
   const handleGoogleSignIn = () => {
     setIsLoading(true)
- 
-    signIn("google", { 
-      callbackUrl: "/chat", // Cambia esto a la URL de tu aplicación
+
+    signIn("google", {
+      callbackUrl: "/dashboard", // Cambia esto a la URL de tu aplicación
       redirect: false // Explicitly set redirect to true
     }).catch(error => {
       console.error("Error:", error)
@@ -71,7 +71,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
 
 useEffect(() => {
   if (session) {
-    window.location.href = "/chat"
+    window.location.href = "/dashboard"
     const user = {
       name: session.user?.name || "Google User",
       email: session.user?.email || "sincorreo@google.com",

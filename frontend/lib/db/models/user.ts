@@ -6,6 +6,8 @@ export interface IBaseUser extends Document {
   username: string;
   email: string;
   password?: string; // opcional por si es OAuth
+  friends?: mongoose.Types.ObjectId[]; // opcional, lista de IDs de amigos
+  isOnline?: boolean; // opcional, estado de conexión
 }
 
 
@@ -14,6 +16,7 @@ export interface IOAuthUser extends IBaseUser {
   oauthId: string;
   oauthProvider: string;
   profilePicture?: string; // opcional, puede ser útil para OAuth
+  
 }
 
 // --- Schema base ---
@@ -22,6 +25,8 @@ const baseUserSchema = new Schema<IBaseUser>(
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String }, // Opcional para OAuth
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "BaseUser" }], // Referencia a otros usuarios
+    isOnline: { type: Boolean, default: false }, // Estado de conexión
   },
   { discriminatorKey: "type", collection: "users", timestamps: true }
 );
