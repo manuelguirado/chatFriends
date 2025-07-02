@@ -1,9 +1,9 @@
 import { connectDatabase } from "@/connectDatabase";
 import { BaseUser } from "@/lib/db/models/user";
 
-export const getFriends = async (userId: string) => {
+export const getFriends = async (email: string) => {
   await connectDatabase();
 
-  const user = await BaseUser.findById(userId).populate("friends");
+  const user = await BaseUser.findOne({ email }).populate("friends");
   return user?.friends || [];
 };
