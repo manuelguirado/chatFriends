@@ -25,7 +25,7 @@ const baseUserSchema = new Schema<IBaseUser>(
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String }, // Opcional para OAuth
-    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "BaseUser" }], // Referencia a otros usuarios
+    friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "BaseUser", default: [] }], // Referencia a otros usuarios
     isOnline: { type: Boolean, default: false }, // Estado de conexión
   },
   { discriminatorKey: "type", collection: "users", timestamps: true }
