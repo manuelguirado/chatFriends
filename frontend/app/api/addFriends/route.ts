@@ -10,6 +10,7 @@ export async function POST(request: Request) {
     }
 
     const response = await addFriend(friendEmail);
+ 
 
     return response;
   } catch (error) {
