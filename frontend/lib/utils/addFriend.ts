@@ -18,13 +18,16 @@ async function updateUserFriends(
   const currentUser = await BaseUser.findOne({ email: currentUserEmail });
   if (!currentUser) throw new Error("Current user not found");
 
+  // Usar updateOne para evitar validación del documento completo
+  await BaseUser.updateOne(
+    { email: currentUserEmail },
+    { $addToSet: { friends: userToAdd._id } }
+  );
 
-
-  currentUser.friends.push(userToAdd._id);
-  userToAdd.friends.push(currentUser._id);
-
-  await currentUser.save();
-  await userToAdd.save();
+  await BaseUser.updateOne(
+    { email: userToAddEmail },
+    { $addToSet: { friends: currentUser._id } }
+  );
 }
 
 export default async function addFriend(email: string) {
