@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
-import socket from "../api/socket/socket"
+import socket from "@/app/api/socket/socket"
+
+
 
 
 interface Message {
@@ -15,6 +17,11 @@ interface Message {
   sender: "user" | "contact"
   timestamp: Date
 
+}
+function getUSerEmailFromUrl(){
+  const url = window.location.href;
+  const emailMatch = url.match(/chat\/([^/]+)/);
+  return emailMatch ? decodeURIComponent(emailMatch[1]) : null;
 }
 
 export default function ChatPage() {
@@ -113,7 +120,7 @@ useEffect(() => {
           <AvatarFallback></AvatarFallback>
         </Avatar>
         <div>
-          <h2 className="font-semibold">{session?.user?.name ?? "Usuario"}</h2>
+          <h2 className="font-semibold">{getUSerEmailFromUrl()}</h2>
           <p className="text-xs text-gray-500">En línea</p>
         </div>
       </header>
