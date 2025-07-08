@@ -1,97 +1,106 @@
-
+import next from "next";
 import { Message } from "./models/messages";
-import { updateReadby,recoverChatMessages} from "./utils/utils";
-import {Server} from "socket.io";
+import {
+  updateReadby,
+  recoverChatMessages,
+  saveMessageTolocalStorage,
+} from "./utils/utils";
 import dotenv from "dotenv";
-import express from "express";
-// Update the import path below if your connectToDatabase file is actually in the backend folder
 import { connectDatabase } from "../frontend/connectDatabase";
 import mongoose from "mongoose";
 import { createServer } from "http";
+import { Server } from "socket.io";
 dotenv.config();
-const app = express();
-const server = createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: process.env.CLIENT_URL,
-        methods: ["GET", "POST"],
-        credentials: true
-    }
-});
-const PORT = process.env.PORT || 3000;
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-try{
-     connectDatabase();
-}catch (error) {
-    console.error("Error al conectar a la base de datos:", error);
+const dev = process.env.NODE_ENV !== "production";
+const hostname = "localhost";
+const port = 3000;
+const app = next({ dev, hostname, port });
+const handle = app.getRequestHandler();
+connectDatabase()
+  .then(() => {
+    console.log("Database connected successfully");
+  })
+  .catch((error) => {
+    console.error("Error connecting to the database:", error);
     process.exit(1);
-}
-io.on ("connection", (socket) => { 
-    console.log("a user connected:", socket.id);
-    socket.on("joinChat", async (chatID) => {
-        try{ 
-            console.log("Usuario se unió al chat:", chatID);
-            // Verificar si el chatID es un ObjectId válido
-            if (!mongoose.Types.ObjectId.isValid(chatID)) {
-                socket.emit("error", "Chat ID inválido");
-                return;
-            }
-            // Unirse a la sala del chat
-            socket.join(chatID);
-            // Emitir un mensaje de confirmación
-            socket.emit("joinedChat", `Te has unido al chat: ${chatID}`);
-            // Recuperar los mensajes del chat desde la base de datos
-            const messages = await recoverChatMessages(chatID);
-            if (messages.length > 0) {
-                // Enviar los mensajes al usuario que se unió
-                socket.emit("chatMessages", messages);
-
-            }else{
-                // Si no hay mensajes, enviar un mensaje de bienvenida
-                socket.emit("chatMessages", [{ content: "Bienvenido al chat", TimeStamp: new Date(), id: socket.id }]);
-            }
-            // Emitir un evento para que los demás usuarios sepan que alguien se unió
-            socket.to(chatID).emit("userJoined", `Un usuario se unió al chat: ${chatID}`);
-            socket.on("sendMessage", async (messageData) => {
-                try { 
-                    console.log("Mensaje recibido:", messageData);
-                    // Validar el mensaje
-                    if (!messageData.content || !messageData.chatID) {
-                        socket.emit("error", "Mensaje o chatID inválido");
-                        return;
-                    }
-                    // Crear un nuevo mensaje
-                    const newMessage = new Message({
-                        chatID: messageData.chatID,
-                        idUser: messageData.idUser || socket.id, // Usar socket.id si no se proporciona idUser
-                        content: messageData.content,
-                        TimeStamp: new Date(),
-                        readyBy: updateReadby([], socket.id) // Inicializar readyBy con el socket.id del usuario que envía el mensaje
-                    });
-                    // Guardar el mensaje en la base de datos
-                    await newMessage.save();
-                    // Emitir el mensaje a todos los usuarios en la sala del chat
-                    io.to(messageData.chatID).emit("newMessage", newMessage);
-                    console.log("Mensaje enviado:", newMessage);
-
-
-                }catch (error: any) {
-                    console.error("Error al enviar el mensaje:", error);
-                    socket.emit("error", "Error al enviar el mensaje");
-                }
-
-            });
-            socket.on("disconnect", () => {
-                console.log("Usuario desconectado:", socket.id);
-                socket.leave(chatID);
-                // Emitir un evento para que los demás usuarios sepan que alguien se desconectó
-                socket.to(chatID).emit("userLeft", `Un usuario se desconectó del chat: ${chatID}`);
-            });
-        }catch(error: any) {
-            console.error("Error al unirse al chat:", error);
-            socket.emit("error", "Error al unirse al chat");
-        }
+  });
+app
+  .prepare()
+  .then(() => {
+    const httpServer = createServer(handle);
+    const io = new Server(httpServer, {
+      cors: {
+        origin: "*",
+        methods: ["GET", "POST"],
+      },
     });
 
-})
+    io.on("connection", async (Socket) => {
+      console.log("A user connected");
+
+      Socket.on("joinChat", async (chatID: string) => {
+        const messages = await recoverChatMessages(chatID);
+        Socket.join(chatID);
+        console.log(`User joined chat: ${chatID}`);
+
+        Socket.emit("chatMessages", messages);
+      });
+
+      Socket.on(
+        "SendMessage",
+        async (data: { chatID: string; content: string; idUser?: string }) => {
+          try {
+            const message = new Message({
+              chatID: new mongoose.Types.ObjectId(data.chatID),
+              content: data.content,
+              idUser: data.idUser
+                ? new mongoose.Types.ObjectId(data.idUser)
+                : undefined,
+              TimeStamp: new Date(),
+            });
+            await message.save();
+            console.log("Message saved:", message);
+            // Emit the new message to all clients in the chat room
+            io.to(data.chatID).emit("newMessage", message);
+            // Update the readBy field for the message
+            updateReadby(data.chatID, message.readyBy, data.idUser, Socket.id);
+            console.log("Message readBy updated:", message._id);
+          } catch (error) {
+            console.error("Error sending message:", error);
+          }
+        }
+      );
+      Socket.on("offline", async (chatID: string) => {
+        try {
+          const message = `User is offline in chat: ${chatID}`;
+          saveMessageTolocalStorage(message);
+          console.log("Message saved to local storage:", message);
+
+          io.to(chatID).emit("userOffline", { chatID, message });
+
+          const messages = await recoverChatMessages(chatID);
+          Socket.emit("chatMessages", messages);
+        } catch (error) {
+          console.error("Error handling offline event:", error);
+        }
+      });
+
+      Socket.on("disconnect", () => {
+        console.log("A user disconnected");
+        Socket.leave(Socket.id);
+      });
+    });
+
+    httpServer
+      .once("error", (err) => {
+        console.error("Server error:", err);
+        process.exit(1);
+      })
+      .listen(port, hostname, () => {
+        console.log(`> Ready on http://${hostname}:${port}`);
+      });
+  })
+  .catch((error) => {
+    console.error("Error during app preparation:", error);
+    process.exit(1);
+  });

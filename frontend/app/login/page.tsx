@@ -37,23 +37,15 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
   }
 
   try {
-    const res = await fetch("/api/login", {
-      method: "POST", // ✅ debe ser POST
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(user),
-    });
-
-    const data = await res.json();
-
-    if (res.ok && data.success) {
-      console.log("Usuario válido", data);
-      window.location.href = "/chat"; 
-    } else {
-      console.error("Error al iniciar sesión:");
-      alert(data.message || "Credenciales incorrectas");
-    }
+    e.preventDefault();
+    const email = (document.getElementById("email") as HTMLInputElement).value;
+    const password = (document.getElementById("password") as HTMLInputElement).value
+    const result = await signIn("credentials", {
+    redirect: true,
+    email: user.email,
+    password: user.password,
+    callbackUrl: "/dashboard", // Cambia esto a la URL de tu aplicación
+  });
   } catch (err) {
     console.error("Error de red:", err);
     alert("Error al conectar con el servidor.");
@@ -64,9 +56,9 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
       
   const handleGoogleSignIn = () => {
     setIsLoading(true)
- 
-    signIn("google", { 
-      callbackUrl: "/chat", // Cambia esto a la URL de tu aplicación
+
+    signIn("google", {
+      callbackUrl: "/dashboard", // Cambia esto a la URL de tu aplicación
       redirect: false // Explicitly set redirect to true
     }).catch(error => {
       console.error("Error:", error)
@@ -79,7 +71,7 @@ const getCredentials = async (e: React.FormEvent<HTMLFormElement>) => {
 
 useEffect(() => {
   if (session) {
-    window.location.href = "/chat"
+    window.location.href = "/dashboard"
     const user = {
       name: session.user?.name || "Google User",
       email: session.user?.email || "sincorreo@google.com",

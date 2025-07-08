@@ -1,0 +1,17 @@
+{
+  "allowEmptyTranslations": false,
+  "defaultLanguage": "en",
+  "forceKeyUPPERCASE": true,
+  "jsonSpace": 2,
+  "keySeparator": ".",
+  "lineEnding": "\n",
+  "supportedFolders": [
+    "i18n"
+  ],
+  "workspaceFolders": [],
+  "defaultWorkspaceFolder": "",
+  "translationService": "Coming soon",
+  "translationServiceApiKey": "Coming soon",
+  "visibleColumns": [],
+  "hiddenColumns": []
+}

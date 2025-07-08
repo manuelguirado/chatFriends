@@ -1,9 +1,11 @@
+
 import { connectDatabase } from "@/connectDatabase";
 
 import mongoose from "mongoose";
 import { verifyPassword } from "@/lib/db/hash/hash";
 import { findUserByEmail } from "./validateLogin";
-import { User } from "../models/user"; // Adjusted path to match the actual file name
+
+import { BaseUser,OAuthUser } from "../models/user";
 
 
 export const createUserInDb = async (userData: {
@@ -15,24 +17,29 @@ export const createUserInDb = async (userData: {
 }) => {
   await connectDatabase();
   const { name, email, password, oauthId, oauthProvider } = userData;
-
-
-const newUser = new User({
-  _id: new mongoose.Types.ObjectId(),
-  name,
-  email,
-  password: oauthProvider ? undefined : password, // si es OAuth no guarda password
-  oauthId,
-  oauthProvider,
-});
-
-  try {
-    const savedUser = await newUser.save();
-    return savedUser;
-  } catch (error) {
-    console.error("Error al guardar el usuario:", error);
-    throw error;
+  // Verificar si el usuario ya existe
+  const existingUser = await findUserByEmail(email);
+  if (existingUser !== null && existingUser !== undefined) {
+    throw new Error("El usuario ya existe");
   }
+  // Crear un nuevo usuario
+  let newUser = oauthId && oauthProvider
+    ? new OAuthUser({
+        username: name,
+        email,
+        oauthId,
+        oauthProvider,
+      })
+    : new BaseUser({
+        username: name,
+        email,
+        password: password 
+      });
+  
+ 
+
+  await newUser.save();
+  return newUser;
 };
 
 export const checkUserCredentials = async (email: string, password: string) => {
@@ -42,9 +49,15 @@ export const checkUserCredentials = async (email: string, password: string) => {
     return { success: false, message: "Usuario no encontrado" };
   }
 
-  if ("password" in userFound && userFound.password) {
+  // Type guard to check if userFound has a password property
+  if (
+    typeof userFound === "object" &&
+    userFound !== null &&
+    "password" in userFound &&
+    typeof (userFound as { password?: string }).password === "string"
+  ) {
     // Es un usuario normal
-    const isValid = await verifyPassword(password, userFound.password);
+    const isValid = await verifyPassword(password, (userFound as { password: string }).password);
     if (!isValid) {
       return { success: false, message: "Contraseña incorrecta" };
     }
