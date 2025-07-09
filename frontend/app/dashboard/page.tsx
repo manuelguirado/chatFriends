@@ -61,7 +61,7 @@ export default function Dashboard() {
                 </div>
                <div className="flex items-center gap-4">
                     <Link href="/addFriends">
-                        <Button className="bg-transparent hover:bg-gray-100 text-gray-700">Añadir amigo</Button>
+                        <Button className="bg-gradient-to-r from-emerald-50 to-emerald-100  hover:bg-gray-100 text-gray-700">Añadir amigo</Button>
                     </Link>
                </div>
             </div>
