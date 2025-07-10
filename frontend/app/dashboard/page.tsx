@@ -23,6 +23,7 @@ export default function Dashboard() {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+  
 
     useEffect(() => {
         fetch('/api/dashboard', {
