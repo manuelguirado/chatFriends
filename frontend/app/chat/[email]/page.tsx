@@ -6,125 +6,87 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
-import socket from "@/app/api/socket/socket"
+import { useSocket } from "@/contexts/SocketContext"
 import { useParams } from 'next/navigation'
-
-interface Message {
-  id: string
-  content: string
-  sender: "user" | "contact"
-  timestamp: Date
-}
 
 export default function ChatPage() {
   const { data: session, status } = useSession()
-  const [messages, setMessages] = useState<Message[]>([])
+  const { messages, isConnected, joinChat, sendMessage, leaveChat } = useSocket()
   const [newMessage, setNewMessage] = useState("")
   const [username, setUsername] = useState("")
   const [profilePicture, setProfilePicture] = useState("")
-  const [isConnected, setIsConnected] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const params = useParams()
   const email = params.email as string
   console.log("ChatPage renderizado, session:", session, "status:", status)
 
-// Obtener datos del usuario
-useEffect(() => {
-  const checkSession = async () => {
-    const res = await fetch("/api/auth/session");
-    const data = await res.json();
-    console.log("🔍 /api/auth/session:", data);
-  };
-
-  checkSession();
-}, []);
-
-useEffect(() => {
-  console.log("useEffect: status=", status, "email=", session?.user?.email);
-  if (!session && status === "unauthenticated") {
-    console.log("No hay sesión activa, redirigiendo a /login");
-    window.location.href = "/login";
-    return;
-  }
-  if (status === "authenticated" && session?.user?.email) {
-    const fetchUserData = async () => {
-      console.log("fetchUserData ejecutado");
-      try {
-        const res = await fetch("/api/user", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: session.user?.email }),
-        });
-        console.log("fetch respuesta", res);
-
-        if (res.status === 400) {
-          console.error("Error 400: Bad request");
-          return;
-        }
-
-        const data = await res.json();
-        if (!res.ok) {
-          console.error("Error:", data.error);
-          return;
-        }
-
-        setUsername(data.username);
-        if (data.profilePicture) {
-          setProfilePicture(data.profilePicture);
-        }
-      } catch (err) {
-        console.error("Error al hacer fetch:", err);
-      }
+  // Obtener datos del usuario
+  useEffect(() => {
+    const checkSession = async () => {
+      const res = await fetch("/api/auth/session");
+      const data = await res.json();
+      console.log("🔍 /api/auth/session:", data);
     };
 
-    fetchUserData();
-  }
-}, [session, status]);
+    checkSession();
+  }, []);
 
-
-  // Socket.io conexión y mensajes
   useEffect(() => {
-    console.log("🔌 Configurando Socket.io...");
-    
-    // Eventos de conexión
-    socket.on("connect", () => {
-      console.log("✅ Socket conectado:", socket.id);
-      setIsConnected(true);
-    });
+    console.log("useEffect: status=", status, "email=", session?.user?.email);
+    if (!session && status === "unauthenticated") {
+      console.log("No hay sesión activa, redirigiendo a /login");
+      window.location.href = "/login";
+      return;
+    }
+    if (status === "authenticated" && session?.user?.email) {
+      const fetchUserData = async () => {
+        console.log("fetchUserData ejecutado");
+        try {
+          const res = await fetch("/api/user", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: session.user?.email }),
+          });
+          console.log("fetch respuesta", res);
 
-    socket.on("disconnect", () => {
-      console.log("❌ Socket desconectado");
-      setIsConnected(false);
-    });
+          if (res.status === 400) {
+            console.error("Error 400: Bad request");
+            return;
+          }
 
-    // Escuchar mensajes
-    socket.on("message", (message: Message) => {
-      console.log("📨 Mensaje recibido:", message);
-      setMessages((prev) => [...prev, message]);
-      scrollToBottom();
-    });
+          const data = await res.json();
+          if (!res.ok) {
+            console.error("Error:", data.error);
+            return;
+          }
 
-    // Cargar mensajes históricos
-    socket.on("loadMessagesResponse", (loadedMessages: Message[]) => {
-      console.log("📋 Mensajes cargados:", loadedMessages);
-      setMessages(loadedMessages);
-      scrollToBottom();
-    });
+          setUsername(data.username);
+          if (data.profilePicture) {
+            setProfilePicture(data.profilePicture);
+          }
+        } catch (err) {
+          console.error("Error al hacer fetch:", err);
+        }
+      };
 
-    // Cargar mensajes al conectar
-    if (email) {
-      socket.emit("loadMessages", email);
+      fetchUserData();
+    }
+  }, [session, status]);
+
+  // ✅ Unirse al chat cuando cambie el email de contacto
+  useEffect(() => {
+    if (email && session?.user?.email) {
+      console.log("🎯 Uniéndose al chat con:", decodeURIComponent(email));
+      joinChat(decodeURIComponent(email));
     }
 
+    // ✅ Cleanup: salir del chat cuando el componente se desmonte o cambie el email
     return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("message");
-      socket.off("loadMessagesResponse");
+      leaveChat();
     };
-  }, [email]);
+  }, [email, session?.user?.email, joinChat, leaveChat]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -132,36 +94,28 @@ useEffect(() => {
     }
   };
 
+  // ✅ Scroll automático cuando llegan nuevos mensajes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (newMessage.trim() === "" || !isConnected) return
+    e.preventDefault();
+    if (newMessage.trim() === "" || !isConnected) return;
     
     console.log("📤 Enviando mensaje:", newMessage);
     
-    // Crear mensaje local
-    const newMsg: Message = {
-      id: Date.now().toString(),
-      content: newMessage,
-      sender: "user",
-      timestamp: new Date(),
-    }
+    // ✅ Usar el custom hook
+    sendMessage(newMessage, decodeURIComponent(email));
     
-    // Añadir mensaje localmente
-    setMessages((prev) => [...prev, newMsg])
-    
-    // Enviar por socket
-    socket.emit("message", newMessage)
-    
-    setNewMessage("")
-    scrollToBottom()
+    setNewMessage("");
   }
   
-  // Función para cargar mensajes manualmente (si es necesario)
-  const handleLoadMessages = () => {
-    if (isConnected) {
-      socket.emit("loadMessages", email)
-    }
-  }
+  // Función para determinar si un mensaje es del usuario actual
+  const isUserMessage = (message: any) => {
+    return message.senderEmail === session?.user?.email;
+  };
+  
   const formatTime = (date: Date) => {
     return new Date(date).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   }
@@ -180,16 +134,6 @@ useEffect(() => {
             {isConnected ? "🟢 En línea" : "🔴 Desconectado"}
           </p>
         </div>
-        {/* Botón debug para recargar mensajes */}
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleLoadMessages}
-          disabled={!isConnected}
-          className="ml-2"
-        >
-          🔄
-        </Button>
       </header>
 
       {/* Messages */}
@@ -205,22 +149,25 @@ useEffect(() => {
           )}
           
           {/* Mensajes */}
-          {messages.map((message) => (
-            <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[80%] rounded-lg p-3 ${
-                  message.sender === "user"
-                    ? "bg-emerald-500 text-white"
-                    : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-                }`}
-              >
-                <p>{message.content}</p>
-                <p className={`text-xs mt-1 ${message.sender === "user" ? "text-emerald-100" : "text-gray-500"}`}>
-                  {formatTime(message.timestamp)}
-                </p>
+          {messages.map((message) => {
+            const isUser = isUserMessage(message);
+            return (
+              <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[80%] rounded-lg p-3 ${
+                    isUser
+                      ? "bg-emerald-500 text-white"
+                      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
+                  }`}
+                >
+                  <p>{message.content}</p>
+                  <p className={`text-xs mt-1 ${isUser ? "text-emerald-100" : "text-gray-500"}`}>
+                    {formatTime(message.timestamp)}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           <div ref={messagesEndRef} />
         </div>
       </div>

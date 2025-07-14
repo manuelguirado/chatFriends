@@ -1,49 +1,45 @@
 import mongoose from 'mongoose';
-interface Message {
-    chatID : mongoose.Types.ObjectId;
-    idUser?: string;
-    TimeStamp: Date;    
-    readyBy? : string[];
-    content: string;
+
+interface IMessage {
+  chatID: string; // Cambiar de ObjectId a String
+  participants: string[]; // Array de emails
+  senderEmail: string;
+  content: string;
+  timestamp: Date;
+  readBy: string[];
 }
-const messageSchema = new mongoose.Schema<Message>({
-    chatID: {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-    },
-    idUser: {
-        type: mongoose.Types.ObjectId,
-        ref: 'User',
-        required: false,
-    },
-    TimeStamp: {
-        type: Date,
-        default: Date.now,
-    },
-    readyBy: {
-        type: [String],
-        default: [],
-    },
-    content: {
-        type: String,
-        required: true,
-    }
-}, {
-    collection: 'messages',
-    toJSON : {
-        virtuals: true,
-    },
-    toObject : {
-        virtuals: true,
-    }
+
+const messageSchema = new mongoose.Schema<IMessage>({
+  chatID: {
+    type: String, // ✅ String en lugar de ObjectId
+    required: true,
+    index: true, // ✅ Índice para performance
+  },
+  participants: {
+    type: [String], // ✅ Array de emails participantes
+    required: true,
+    index: true,
+  },
+  senderEmail: {
+    type: String,
+    required: true,
+  },
+  content: {
+    type: String,
+    required: true,
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now,
+    index: true, // ✅ Índice para ordenar por fecha
+  },
+  readBy: {
+    type: [String],
+    default: [],
+  }
 });
 
-//join the userID from the user collection from the idUser field
-messageSchema.virtual('user', {
-    ref: 'User',
-    localField: 'idUser',
-    foreignField: '_id',
-    justOne: true,
-});
+// ✅ Índice compuesto para búsquedas eficientes
+messageSchema.index({ chatID: 1, timestamp: 1 });
 
-export const Message = mongoose.models.Message || mongoose.model<Message>('Message', messageSchema);
+export const Message = mongoose.models.Message || mongoose.model<IMessage>('Message', messageSchema);
