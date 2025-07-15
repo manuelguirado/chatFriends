@@ -48,18 +48,45 @@ io.on("connection", async (socket) => {
 
   // ✅ Autenticación del usuario
   socket.on("authenticate", (userEmail: string) => {
+    console.log("🔐 Authenticating user:", userEmail);
+    if (!userEmail || typeof userEmail !== 'string') {
+      console.log("❌ Invalid userEmail:", userEmail);
+      socket.emit("error", "Invalid user email");
+      return;
+    }
+    
     currentUserEmail = userEmail;
-    console.log("🔐 User authenticated:", userEmail);
+    console.log("✅ User authenticated:", userEmail);
+    
+    // Confirmar autenticación al frontend
+    socket.emit("authenticated", { userEmail });
   });
 
   // ✅ Unirse a un chat específico
   socket.on("joinChat", async (contactEmail: string) => {
+    console.log("🔍 joinChat called with:", { currentUserEmail, contactEmail });
+    
     if (!currentUserEmail) {
+      console.log("❌ User not authenticated for joinChat");
       socket.emit("error", "User not authenticated");
       return;
     }
 
+    if (!contactEmail || typeof contactEmail !== 'string') {
+      console.log("❌ Invalid contactEmail:", contactEmail);
+      socket.emit("error", "Invalid contact email");
+      return;
+    }
+
+    // ✅ Validación adicional de currentUserEmail antes de usar
+    if (!currentUserEmail || typeof currentUserEmail !== 'string') {
+      console.log("❌ Invalid currentUserEmail state:", currentUserEmail);
+      socket.emit("error", "Invalid current user email state");
+      return;
+    }
+
     try {
+      console.log("🔧 Generating chatID with:", { currentUserEmail, contactEmail });
       const chatID = generateChatID(currentUserEmail, contactEmail);
       const participants = getParticipants(currentUserEmail, contactEmail);
       
@@ -86,6 +113,26 @@ io.on("connection", async (socket) => {
   socket.on("sendMessage", async (data: { contactEmail: string; content: string }) => {
     if (!currentUserEmail) {
       socket.emit("error", "User not authenticated");
+      return;
+    }
+
+    // ✅ Validar data completa
+    if (!data || !data.contactEmail || !data.content) {
+      console.log("❌ Invalid message data:", data);
+      socket.emit("error", "Invalid message data");
+      return;
+    }
+
+    if (typeof data.contactEmail !== 'string' || typeof data.content !== 'string') {
+      console.log("❌ Invalid data types:", data);
+      socket.emit("error", "Invalid message data types");
+      return;
+    }
+
+    // ✅ Validación adicional de currentUserEmail
+    if (!currentUserEmail || typeof currentUserEmail !== 'string') {
+      console.log("❌ Invalid currentUserEmail state in sendMessage:", currentUserEmail);
+      socket.emit("error", "Invalid current user email state");
       return;
     }
 

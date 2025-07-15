@@ -21,59 +21,41 @@ export default function ChatPage() {
   console.log("ChatPage renderizado, session:", session, "status:", status)
 
   // Obtener datos del usuario
-  useEffect(() => {
-    const checkSession = async () => {
-      const res = await fetch("/api/auth/session");
-      const data = await res.json();
-      console.log("🔍 /api/auth/session:", data);
+ useEffect(() => {
+  if (
+    status === "authenticated" &&
+    session?.user?.email &&
+    !username // ✅ Evita que se repita si ya tenemos el username
+  ) {
+    const fetchUserData = async () => {
+      try {
+        const res = await fetch("/api/user", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email: session.user.email }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          console.error("Error:", data.error);
+          return;
+        }
+
+        setUsername(data.username);
+        if (data.profilePicture) {
+          setProfilePicture(data.profilePicture);
+        }
+      } catch (err) {
+        console.error("Error al hacer fetch:", err);
+      }
     };
 
-    checkSession();
-  }, []);
+    fetchUserData();
+  }
+}, [session?.user?.email, status, username]);
 
-  useEffect(() => {
-    console.log("useEffect: status=", status, "email=", session?.user?.email);
-    if (!session && status === "unauthenticated") {
-      console.log("No hay sesión activa, redirigiendo a /login");
-      window.location.href = "/login";
-      return;
-    }
-    if (status === "authenticated" && session?.user?.email) {
-      const fetchUserData = async () => {
-        console.log("fetchUserData ejecutado");
-        try {
-          const res = await fetch("/api/user", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ email: session.user?.email }),
-          });
-          console.log("fetch respuesta", res);
-
-          if (res.status === 400) {
-            console.error("Error 400: Bad request");
-            return;
-          }
-
-          const data = await res.json();
-          if (!res.ok) {
-            console.error("Error:", data.error);
-            return;
-          }
-
-          setUsername(data.username);
-          if (data.profilePicture) {
-            setProfilePicture(data.profilePicture);
-          }
-        } catch (err) {
-          console.error("Error al hacer fetch:", err);
-        }
-      };
-
-      fetchUserData();
-    }
-  }, [session, status]);
 
   // ✅ Unirse al chat cuando cambie el email de contacto
   useEffect(() => {
@@ -149,10 +131,10 @@ export default function ChatPage() {
           )}
           
           {/* Mensajes */}
-          {messages.map((message) => {
+          {messages.map((message, index) => {
             const isUser = isUserMessage(message);
             return (
-              <div key={message.id} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
+              <div key={message.id || (message.timestamp instanceof Date ? message.timestamp.toISOString() : message.timestamp) || index} className={`flex ${isUser ? "justify-end" : "justify-start"}`}>
                 <div
                   className={`max-w-[80%] rounded-lg p-3 ${
                     isUser

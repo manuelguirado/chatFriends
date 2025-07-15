@@ -15,6 +15,7 @@ interface Message {
 interface SocketContextType {
   socket: Socket | null;
   isConnected: boolean;
+  isAuthenticated: boolean;
   messages: Message[];
   currentChatID: string | null;
   joinChat: (contactEmail: string) => void;
@@ -28,127 +29,129 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentChatID, setCurrentChatID] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  // ✅ Inicializar socket SOLO una vez cuando hay sesión
   useEffect(() => {
-    // Prevenir múltiples inicializaciones
-    if (!session?.user?.email || isInitialized || socket) {
+    if (!session?.user?.email) {
+      if (socket) {
+        socket.disconnect();
+        setSocket(null);
+        setIsConnected(false);
+        setIsAuthenticated(false);
+      }
       return;
     }
 
-    console.log("🔌 Inicializando Socket.io ÚNICA VEZ...");
-    setIsInitialized(true);
+    // Si ya hay un socket, no crear otro
+    if (socket) return;
+
+    console.log("🔌 Inicializando Socket.io...");
     
     const newSocket = io("http://localhost:4000", {
-      transports: ["websocket", "polling"],
+      transports: ["websocket"],
       reconnection: true,
-      reconnectionAttempts: 3, // ✅ Reducir intentos
-      reconnectionDelay: 2000,  // ✅ Aumentar delay
-      timeout: 5000,           // ✅ Timeout más corto
-      forceNew: false,         // ✅ Reutilizar conexión
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
-    // ✅ Event listeners centralizados
-    newSocket.on("connect", () => {
+    // Event handlers
+    const handleConnect = () => {
       console.log("✅ Socket conectado:", newSocket.id);
       setIsConnected(true);
-      newSocket.emit("authenticate", session.user.email);
-    });
+      newSocket.emit("authenticate", session.user!.email);
+    };
 
-    newSocket.on("disconnect", (reason) => {
-      console.log("❌ Socket desconectado. Razón:", reason);
-      setIsConnected(false);
-      
-      // ✅ Solo reconectar en ciertos casos
-      if (reason === "io server disconnect") {
-        console.log("🔄 Servidor desconectó, reintentando...");
-        newSocket.connect();
-      }
-    });
+    const handleAuthenticated = () => {
+      console.log("✅ Usuario autenticado");
+      setIsAuthenticated(true);
+    };
 
-    newSocket.on("connect_error", (error) => {
-      console.error("❌ Error de conexión:", error.message);
-      setIsConnected(false);
-    });
-
-    newSocket.on("chatJoined", (data) => {
+    const handleChatJoined = (data: any) => {
       console.log("👥 Chat joined:", data);
       setCurrentChatID(data.chatID);
-    });
+    };
 
-    newSocket.on("chatMessages", (chatMessages) => {
+    const handleChatMessages = (chatMessages: Message[]) => {
       console.log("📋 Mensajes cargados:", chatMessages);
       setMessages(chatMessages);
-    });
+    };
 
-    newSocket.on("newMessage", (message) => {
+    const handleNewMessage = (message: Message) => {
       console.log("📨 Nuevo mensaje:", message);
       setMessages(prev => [...prev, message]);
-    });
+    };
 
-    newSocket.on("error", (error) => {
-      console.error("❌ Socket error:", error);
-    });
+    const handleDisconnect = () => {
+      console.log("❌ Socket desconectado");
+      setIsConnected(false);
+      setIsAuthenticated(false);
+    };
+
+    // Registrar listeners
+    newSocket.on("connect", handleConnect);
+    newSocket.on("authenticated", handleAuthenticated);
+    newSocket.on("chatJoined", handleChatJoined);
+    newSocket.on("chatMessages", handleChatMessages);
+    newSocket.on("newMessage", handleNewMessage);
+    newSocket.on("disconnect", handleDisconnect);
 
     setSocket(newSocket);
 
-    // ✅ Cleanup mejorado
     return () => {
-      console.log("🧹 Limpiando socket...");
-      newSocket.removeAllListeners();
       newSocket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
-      setIsInitialized(false);
     };
-  }, [session?.user?.email, isInitialized, socket]);
+  }, [session?.user?.email]);
 
-  // ✅ Funciones del contexto con validaciones
+
   const joinChat = (contactEmail: string) => {
     if (!socket || !isConnected) {
-      console.warn("⚠️ Socket no disponible para unirse al chat");
+      console.log("❌ Socket no conectado");
       return;
     }
     
-    console.log("👥 Joining chat with:", contactEmail);
-    socket.emit("joinChat", contactEmail);
-    setMessages([]); // Limpiar mensajes anteriores
+    if (!isAuthenticated) {
+      console.log("❌ Usuario no autenticado");
+      return;
+    }
+
+    console.log("🔄 Joining chat with:", contactEmail);
+    socket.emit('joinChat', contactEmail); // Backend espera solo el contactEmail
   };
 
   const sendMessage = (content: string, contactEmail: string) => {
     if (!socket || !isConnected) {
-      console.warn("⚠️ Socket no disponible para enviar mensaje");
+      console.log("❌ Socket no conectado para enviar mensaje");
       return;
     }
     
-    if (!content.trim()) {
-      console.warn("⚠️ Mensaje vacío");
+    if (!isAuthenticated) {
+      console.log("❌ Usuario no autenticado para enviar mensaje");
       return;
     }
-    
-    console.log("📤 Enviando mensaje:", content);
-    socket.emit("sendMessage", {
-      contactEmail,
-      content
-    });
+
+    console.log("📤 Sending message:", { content, contactEmail });
+    socket.emit('sendMessage', { content, contactEmail }); // Sin chatID, el backend lo genera
   };
 
   const leaveChat = () => {
-    setCurrentChatID(null);
-    setMessages([]);
+    if (socket && isConnected && currentChatID) {
+      socket.emit('leaveChat', { chatID: currentChatID });
+      setCurrentChatID(null);
+      setMessages([]);
+    }
   };
 
-  const value: SocketContextType = {
+  const value = {
     socket,
     isConnected,
+    isAuthenticated,
     messages,
     currentChatID,
     joinChat,
     sendMessage,
-    leaveChat,
+    leaveChat
   };
 
   return (
