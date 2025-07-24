@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useRef, useEffect } from "react"
 import { useSession } from "next-auth/react"
 import { Button } from "@/components/ui/button"
@@ -8,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Send } from "lucide-react"
 import { useSocket } from "@/contexts/SocketContext"
 import { useParams } from 'next/navigation'
+import socket from "@/app/api/socket/socket"
 
 export default function ChatPage() {
   const { data: session, status } = useSession()
@@ -29,6 +29,7 @@ export default function ChatPage() {
   ) {
     const fetchUserData = async () => {
       try {
+     
         const res = await fetch("/api/user", {
           method: "POST",
           headers: {
@@ -63,6 +64,9 @@ export default function ChatPage() {
       console.log("🎯 Uniéndose al chat con:", decodeURIComponent(email));
       joinChat(decodeURIComponent(email));
     }
+    /* 
+      *TODO: fix the re-render 
+    */
 
     // ✅ Cleanup: salir del chat cuando el componente se desmonte o cambie el email
     return () => {
@@ -70,11 +74,13 @@ export default function ChatPage() {
     };
   }, [email, session?.user?.email, joinChat, leaveChat]);
 
-  const scrollToBottom = () => {
+
+   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+
 
   // ✅ Scroll automático cuando llegan nuevos mensajes
   useEffect(() => {
@@ -89,10 +95,10 @@ export default function ChatPage() {
     
     // ✅ Usar el custom hook
     sendMessage(newMessage, decodeURIComponent(email));
-    
     setNewMessage("");
-  }
-  
+   
+  };
+
   // Función para determinar si un mensaje es del usuario actual
   const isUserMessage = (message: any) => {
     return message.senderEmail === session?.user?.email;

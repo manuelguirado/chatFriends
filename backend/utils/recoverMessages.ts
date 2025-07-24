@@ -2,7 +2,7 @@ import  { connectDatabase } from "../connectDatabase";
 import { Message } from "../models/messages";
 //function to recover the messages chat from the database
 
-async function recoverChatMessages(chatID: string) {
+async function recoverChatMessages(chatID: string, currentUserEmail: string) {
     try { 
 
         await connectDatabase().then(() => {

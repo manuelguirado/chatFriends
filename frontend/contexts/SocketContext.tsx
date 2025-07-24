@@ -1,9 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode,useCallback} from 'react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
-
 interface Message {
   id: string;
   content: string;
@@ -105,57 +104,55 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   }, [session?.user?.email]);
 
 
-  const joinChat = (contactEmail: string) => {
-    if (!socket || !isConnected) {
-      console.log("❌ Socket no conectado");
-      return;
-    }
-    
-    if (!isAuthenticated) {
-      console.log("❌ Usuario no autenticado");
-      return;
-    }
+  const joinChat = useCallback((contactEmail: string) => {
+  if (!socket || !isConnected) {
+    console.log("❌ Socket no conectado");
+    return;
+  }
 
-    console.log("🔄 Joining chat with:", contactEmail);
-    socket.emit('joinChat', contactEmail); // Backend espera solo el contactEmail
-  };
+  if (!isAuthenticated) {
+    console.log("❌ Usuario no autenticado");
+    return;
+  }
 
-  const sendMessage = (content: string, contactEmail: string) => {
-    if (!socket || !isConnected) {
-      console.log("❌ Socket no conectado para enviar mensaje");
-      return;
-    }
-    
-    if (!isAuthenticated) {
-      console.log("❌ Usuario no autenticado para enviar mensaje");
-      return;
-    }
+  console.log("🔄 Joining chat with:", contactEmail);
+  socket.emit('joinChat', contactEmail);
+}, [socket, isConnected, isAuthenticated]);
 
-    console.log("📤 Sending message:", { content, contactEmail });
-    socket.emit('sendMessage', { content, contactEmail }); // Sin chatID, el backend lo genera
-  };
+const sendMessage = useCallback((content: string, contactEmail: string) => {
+  if (!socket || !isConnected) {
+    console.log("❌ Socket no conectado para enviar mensaje");
+    return;
+  }
 
-  const leaveChat = () => {
-    if (socket && isConnected && currentChatID) {
-      socket.emit('leaveChat', { chatID: currentChatID });
-      setCurrentChatID(null);
-      setMessages([]);
-    }
-  };
+  if (!isAuthenticated) {
+    console.log("❌ Usuario no autenticado para enviar mensaje");
+    return;
+  }
 
-  const value = {
-    socket,
-    isConnected,
-    isAuthenticated,
-    messages,
-    currentChatID,
-    joinChat,
-    sendMessage,
-    leaveChat
-  };
+  console.log("📤 Sending message:", { content, contactEmail });
+  socket.emit('sendMessage', { content, contactEmail });
+}, [socket, isConnected, isAuthenticated]);
+
+const leaveChat = useCallback(() => {
+  if (socket && isConnected && currentChatID) {
+    socket.emit('leaveChat', { chatID: currentChatID });
+    setCurrentChatID(null);
+    setMessages([]);
+  }
+}, [socket, isConnected, currentChatID]);
 
   return (
-    <SocketContext.Provider value={value}>
+    <SocketContext.Provider value={{
+      socket,
+      isConnected,
+      isAuthenticated,
+      messages,
+      currentChatID,
+      joinChat,
+      sendMessage,
+      leaveChat
+    }}>
       {children}
     </SocketContext.Provider>
   );

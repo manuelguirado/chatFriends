@@ -91,7 +91,7 @@ io.on("connection", async (socket) => {
       const participants = getParticipants(currentUserEmail, contactEmail);
       
       // Unirse a la sala del chat
-      socket.join(chatID);
+      socket.join(chatID)
       console.log(`👥 User ${currentUserEmail} joined chat: ${chatID}`);
       
       // Cargar mensajes históricos
@@ -99,8 +99,14 @@ io.on("connection", async (socket) => {
         .sort({ timestamp: 1 })
         .limit(50) // ✅ Limitar para performance
         .lean(); // ✅ Mejor performance
-      
-      socket.emit("chatMessages", messages);
+
+      console.log(`📋 Loaded ${messages.length} messages for chat: ${chatID}`);
+      if (messages.length > 0) {
+        // ✅ Enviar mensajes al cliente
+        socket.emit("chatMessages", messages);
+      }else{
+        socket.emit("chatMessages", []);
+      }
       socket.emit("chatJoined", { chatID, participants });
       
     } catch (error) {
@@ -190,6 +196,25 @@ io.on("connection", async (socket) => {
       
     } catch (error) {
       console.error("❌ Error marking as read:", error);
+    }
+  });
+  socket.on("loadChatMessages", async (chatID: string) => {
+    if (!currentUserEmail) {
+      socket.emit("error", "User not authenticated");
+      return;
+    }
+    try{
+      const messages = await recoverChatMessages(chatID, currentUserEmail);
+      if (messages.length > 0) {
+        socket.emit("chatMessages", messages);
+      } else {
+        socket.emit("chatMessages", []);
+      }
+      console.log(`📋 Loaded ${messages.length} messages for chat: ${chatID}`);
+
+    }catch (error) {
+      console.error("❌ Error loading chat messages:", error);
+      socket.emit("error", "Failed to load chat messages");
     }
   });
 
