@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode,useCallback} from 'react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
+import { setUserOnline } from '@/lib/utils/userOnline';
 interface Message {
   id: string;
   content: string;
@@ -27,7 +28,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [isConnected, setUserOnline] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentChatID, setCurrentChatID] = useState<string | null>(null);
@@ -37,7 +38,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
-        setIsConnected(false);
+        setUserOnline(false);
         setIsAuthenticated(false);
       }
       return;
@@ -58,7 +59,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     // Event handlers
     const handleConnect = () => {
       console.log("✅ Socket conectado:", newSocket.id);
-      setIsConnected(true);
+      setUserOnline(true);
       newSocket.emit("authenticate", session.user!.email);
     };
 
@@ -84,7 +85,7 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     const handleDisconnect = () => {
       console.log("❌ Socket desconectado");
-      setIsConnected(false);
+      setUserOnline(false);
       setIsAuthenticated(false);
     };
 

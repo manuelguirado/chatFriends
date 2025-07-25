@@ -19,7 +19,7 @@ export default function ChatPage() {
   const params = useParams()
   const email = params.email as string
   console.log("ChatPage renderizado, session:", session, "status:", status)
-
+  
   // Obtener datos del usuario
  useEffect(() => {
   if (

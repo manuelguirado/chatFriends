@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
+
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,7 +23,10 @@ export async function GET(request: Request) {
     }
 
     try {
-      await setUserOnline(userId);
+      await setUserOnline(userId).then(() => {
+          setUserOnline(email, true);
+      });
+     
     } catch (err) {
       console.error("❌ Error setting user online:", err);
       return NextResponse.json({ error: "Error setting user online" }, { status: 500 });

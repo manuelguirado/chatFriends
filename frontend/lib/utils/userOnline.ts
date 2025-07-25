@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 
 export const setUserOnline = async (userIdentifier: string, isEmail: boolean = false) => {
   await connectDatabase();
-  
+   
   if (userIdentifier) {
     if (isEmail) {
       // Buscar por email
