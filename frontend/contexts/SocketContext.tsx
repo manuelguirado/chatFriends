@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode,useCallback} from 'react';
 import { useSession } from 'next-auth/react';
 import { io, Socket } from 'socket.io-client';
-import { setUserOnline } from '@/lib/utils/userOnline';
+
 interface Message {
   id: string;
   content: string;
@@ -17,10 +17,12 @@ interface SocketContextType {
   isConnected: boolean;
   isAuthenticated: boolean;
   messages: Message[];
+  onlineUsers: string[];
   currentChatID: string | null;
   joinChat: (contactEmail: string) => void;
   sendMessage: (content: string, contactEmail: string) => void;
   leaveChat: () => void;
+  isUserOnline: (email: string) => boolean;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -28,17 +30,19 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 export function SocketProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [isConnected, setUserOnline] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [currentChatID, setCurrentChatID] = useState<string | null>(null);
+  const email = session?.user?.email || '';
 
   useEffect(() => {
     if (!session?.user?.email) {
       if (socket) {
         socket.disconnect();
         setSocket(null);
-        setUserOnline(false);
+        setIsConnected(false);
         setIsAuthenticated(false);
       }
       return;
@@ -59,13 +63,18 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     // Event handlers
     const handleConnect = () => {
       console.log("✅ Socket conectado:", newSocket.id);
-      setUserOnline(true);
+      setIsConnected(true);
       newSocket.emit("authenticate", session.user!.email);
     };
 
     const handleAuthenticated = () => {
       console.log("✅ Usuario autenticado");
       setIsAuthenticated(true);
+    };
+
+    const handleOnlineUsers = (users: string[]) => {
+      console.log("👥 Usuarios online:", users);
+      setOnlineUsers(users);
     };
 
     const handleChatJoined = (data: any) => {
@@ -85,13 +94,15 @@ export function SocketProvider({ children }: { children: ReactNode }) {
 
     const handleDisconnect = () => {
       console.log("❌ Socket desconectado");
-      setUserOnline(false);
+      setIsConnected(false);
       setIsAuthenticated(false);
+      setOnlineUsers([]); // Limpiar usuarios online al desconectarse
     };
 
     // Registrar listeners
     newSocket.on("connect", handleConnect);
     newSocket.on("authenticated", handleAuthenticated);
+    newSocket.on("onlineUsers", handleOnlineUsers);
     newSocket.on("chatJoined", handleChatJoined);
     newSocket.on("chatMessages", handleChatMessages);
     newSocket.on("newMessage", handleNewMessage);
@@ -108,6 +119,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
   const joinChat = useCallback((contactEmail: string) => {
   if (!socket || !isConnected) {
     console.log("❌ Socket no conectado");
+    setIsConnected(false);
+    setIsAuthenticated(false);
     return;
   }
 
@@ -143,16 +156,22 @@ const leaveChat = useCallback(() => {
   }
 }, [socket, isConnected, currentChatID]);
 
+const isUserOnline = useCallback((email: string): boolean => {
+  return onlineUsers.includes(email);
+}, [onlineUsers]);
+
   return (
     <SocketContext.Provider value={{
       socket,
       isConnected,
       isAuthenticated,
       messages,
+      onlineUsers,
       currentChatID,
       joinChat,
       sendMessage,
-      leaveChat
+      leaveChat,
+      isUserOnline
     }}>
       {children}
     </SocketContext.Provider>

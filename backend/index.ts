@@ -1,5 +1,7 @@
+import { setUserOnline, setUserOffline, getOnlineUsers } from './utils/userOnline';
 import { connectDatabase } from './connectDatabase';
 import { Message } from "./models/messages";
+import { generateChatID, getParticipants } from './utils/chatUtils';
 import {
   updateReadby,
  
@@ -12,7 +14,6 @@ import mongoose from "mongoose";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import express from "express";
-import { generateChatID, getParticipants } from './utils/chatUtils';
 
 dotenv.config();
 
@@ -55,8 +56,15 @@ io.on("connection", async (socket) => {
       return;
     }
     
+    
     currentUserEmail = userEmail;
     console.log("✅ User authenticated:", userEmail);
+    
+    // Marcar usuario como online
+    setUserOnline(userEmail);
+    
+    // Emitir lista actualizada de usuarios online a todos los clientes
+    io.emit("onlineUsers", getOnlineUsers());
     
     // Confirmar autenticación al frontend
     socket.emit("authenticated", { userEmail });
@@ -222,7 +230,13 @@ io.on("connection", async (socket) => {
   socket.on("disconnect", () => {
     console.log("🔌 User disconnected:", socket.id);
     if (currentUserEmail) {
-      // Opcional: Actualizar estado offline en base de datos
+      // Marcar usuario como offline
+      setUserOffline(currentUserEmail);
+      
+      // Emitir lista actualizada de usuarios online a todos los clientes
+      io.emit("onlineUsers", getOnlineUsers());
+      
+      console.log(`❌ User ${currentUserEmail} set offline`);
     }
   });
 });
