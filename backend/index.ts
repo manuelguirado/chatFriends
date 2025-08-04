@@ -23,7 +23,7 @@ const httpServer = createServer(app);
 // Configurar Socket.io
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000", // Tu frontend
+    origin: "https://chat-friends-alpha.vercel.app", // Tu frontend
     methods: ["GET", "POST"],
   },
 });

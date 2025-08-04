@@ -52,8 +52,8 @@ export function SocketProvider({ children }: { children: ReactNode }) {
     if (socket) return;
 
     console.log("🔌 Inicializando Socket.io...");
-    
-    const newSocket = io("http://localhost:4000", {
+
+    const newSocket = io("https://server.chatfriends.com", {
       transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: 5,
