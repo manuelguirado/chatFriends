@@ -31,6 +31,6 @@
     "esm": true,
     "experimentalSpecifier": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../backend/hash/hash.ts"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "../backend/hash/hash.ts", "../userOnline.ts"],
   "exclude": ["node_modules"]
 }

@@ -1,28 +1,21 @@
 "use client"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { MessageCircle } from "lucide-react"
+import { MessageCircle, UserCheck, UserX } from "lucide-react"
 import { useEffect, useState } from "react"
+import { useSocket } from "@/contexts/SocketContext"
 
 type Friend = {
   email: string;
   status?: string;
 };
 
-type FriendData = {
-  friends: Array<{ friends: Friend[] }>;
-};
-function setOnline(friends: Friend[]): Friend[] {
-  return friends.map(friend => ({
-    ...friend,
-    status: 'Activo' // Assuming all friends are online for this example
-  }));
-}
-
 export default function Dashboard() {
     const [friends, setFriends] = useState<Friend[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const { isUserOnline, isConnected, isAuthenticated } = useSocket();
+  
 
     useEffect(() => {
         fetch('/api/dashboard', {
@@ -50,75 +43,107 @@ export default function Dashboard() {
         });
     }, []);
 
-    return (
-     <div className="flex flex-col min-h-screen">
-            {/* Navigation */}
-        <header className="border-b w-full">
-            <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
-                <div className="flex items-center gap-2">
-                    <MessageCircle className="h-6 w-6 text-emerald-500" />
-                    <span className="text-xl font-bold">ChatFriends</span>
-                </div>
-               <div className="flex items-center gap-4">
-                    <Link href="/addFriends">
-                        <Button className="bg-gradient-to-r from-emerald-50 to-emerald-100  hover:bg-gray-100 text-gray-700">Añadir amigo</Button>
-                    </Link>
-               </div>
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-lg">Cargando amigos...</div>
             </div>
-        </header>
-        
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {/* User Chat Component */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6">
-                    {loading ? (
-                        <p className="text-center text-gray-500">Loading friends...</p>
-                    ) : error ? (
-                        <p className="text-center text-red-500">Error: {error}</p>
-                    ) : friends.length === 0 ? (
-                        <p className="text-center text-gray-600">
-                            No tienes amigos. ¡Pincha en el botón añadir amigo para poder agregar a tus amigos!
-                        </p>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="text-lg text-red-500">Error: {error}</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="flex flex-col min-h-screen">
+            {/* Navigation */}
+            <header className="border-b w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8 flex items-center justify-between py-4">
+                    <div className="flex items-center gap-2">
+                        <MessageCircle className="h-6 w-6 text-emerald-500" />
+                        <span className="text-xl font-bold">ChatFriends</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm ${
+                            isConnected && isAuthenticated 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-red-100 text-red-800'
+                        }`}>
+                            {isConnected && isAuthenticated ? (
+                                <>
+                                    <UserCheck className="h-4 w-4" />
+                                    Conectado
+                                </>
+                            ) : (
+                                <>
+                                    <UserX className="h-4 w-4" />
+                                    Desconectado
+                                </>
+                            )}
+                        </div>
+                        <Link href="/addFriends">
+                            <Button className="bg-gradient-to-r from-emerald-50 to-emerald-100 hover:bg-gray-100 text-gray-700">
+                                Añadir amigo
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
+            </header>
+            
+            {/* Main Content */}
+            <main className="flex-1 p-4 sm:p-6 lg:p-8">
+                <div className="max-w-4xl mx-auto">
+                    <h1 className="text-2xl font-bold mb-6">Tus Amigos</h1>
+                    
+                    {friends.length === 0 ? (
+                        <div className="text-center py-8">
+                            <p className="text-gray-500 mb-4">No tienes amigos agregados todavía.</p>
+                            <Link href="/addFriends">
+                                <Button>Agregar Amigos</Button>
+                            </Link>
+                        </div>
                     ) : (
-                        <div className="space-y-4">
-                            <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
-                                Tus Amigos ({friends.length})
-                            </h3>
-                            <div className="grid gap-3">
-                                {friends.map((friend, index) => (
-                                    <Link href={`/chat/${friend.email}`} key={index}>
-                                    <div 
-                                        key={index}
-                                        className="bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 p-4 rounded-lg border border-emerald-200 dark:border-emerald-700 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
-                                                <span className="text-white font-semibold text-lg">
+                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                            {friends.map((friend, index) => {
+                                const isOnline = isUserOnline(friend.email);
+                                return (
+                                    <div key={friend.email || index} className="border rounded-lg p-4 hover:shadow-md transition-shadow">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
                                                     {friend.email.charAt(0).toUpperCase()}
-                                                </span>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-medium">{friend.email}</h3>
+                                                    <div className={`flex items-center gap-1 text-sm ${
+                                                        isOnline ? 'text-green-600' : 'text-gray-500'
+                                                    }`}>
+                                                        <div className={`w-2 h-2 rounded-full ${
+                                                            isOnline ? 'bg-green-500' : 'bg-gray-400'
+                                                        }`} />
+                                                        {isOnline ? 'En línea' : 'Desconectado'}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                              <a href="/chat">
-                                                <p className="text-gray-800 dark:text-gray-200 font-medium" >
-                                                    {friend.email}
-                                                </p>
-                                                </a>
-                                                <p className="text-emerald-600 dark:text-emerald-400 text-sm">
-                                                    {setOnline([friend])[0].status|| 'Activo'}
-                                                </p>
-                                            </div>
-                                            <MessageCircle className="w-5 h-5 text-emerald-500" />
                                         </div>
+                                        <Link href={`/chat/${encodeURIComponent(friend.email)}`}>
+                                            <Button variant="outline" className="w-full">
+                                                <MessageCircle className="h-4 w-4 mr-2" />
+                                                Chatear
+                                            </Button>
+                                        </Link>
                                     </div>
-                                    </Link>
-                                ))}
-                            </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>
-            </div>
-        </main>
-    </div>
+            </main>
+        </div>
     );
 }

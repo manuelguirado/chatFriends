@@ -1,144 +1,224 @@
-# Proyecto ChatFriends
+# 🚀 ChatFriends
 
-```markdown
-# Estructura del Proyecto
+Una aplicación de chat en tiempo real moderna y elegante construida con **Next.js 15**, **TypeScript** y **MongoDB**.
 
-Este proyecto está dividido en dos partes principales: **backend** y **frontend**. A continuación, se detalla la estructura de cada uno:
+## ✨ Características
 
-## Backend
+- 🔐 **Autenticación segura** con Google OAuth (NextAuth.js)
+- 👥 **Sistema completo de amigos** - Añadir y gestionar contactos
+- 💬 **Chat dinámico** - Conversaciones individualizadas por contacto
+- 🟢 **Estados online** - Ver quién está conectado
+- 🎨 **UI moderna** - Diseño responsive con Tailwind CSS + shadcn/ui
+- ⚡ **Rutas dinámicas** - `/chat/[email]` para navegación fluida
+- 📱 **Responsive design** - Optimizado para móvil y desktop
+
+## 🛠️ Stack Tecnológico
+
+### Frontend
+- **Framework**: Next.js 15 (App Router)
+- **Lenguaje**: TypeScript
+- **Estilos**: Tailwind CSS + shadcn/ui
+- **Autenticación**: NextAuth.js
+- **Despliegue**: Vercel
+
+### Backend & Base de Datos
+- **Base de datos**: MongoDB Atlas
+- **ODM**: Mongoose
+- **APIs**: Next.js API Routes
+- **Real-time**: Socket.io (V3.0 - Coming soon)
+
+## 🚀 Demo en Vivo
+
+**🔗 [https://chat-friends-alpha.vercel.app](https://chat-friends-alpha.vercel.app)**
+
+## 📁 Estructura del Proyecto
 
 ```plaintext
-backend/
-├── src/
-│   ├── app.ts                # Main application configuration
-│   ├── server.ts             # Server entry point
-│   ├── database/             # Database connection and configuration
-│   │   └── connection.ts
-│   ├── sockets/              # Socket.IO logic for real-time communication
-│   │   └── index.ts
-│   ├── routes/               # API route definitions
-│   │   ├── index.ts          # Main file to combine routes
-│   │   └── user.routes.ts    # User-specific routes
-│   ├── controllers/          # Route logic handlers
-│   │   ├── user.controller.ts
-│   │   └── message.controller.ts
-│   ├── middlewares/          # Custom middlewares
-│   │   └── auth.middleware.ts
-│   ├── models/               # Data models (Mongoose/Sequelize)
-│   │   └── user.model.ts
-│   ├── utils/                # Helper functions and utilities
-│   │   └── logger.ts
-│   └── config/               # Application configuration
-│       ├── env.ts            # Environment variables
-│       └── socket.config.ts  # Socket.IO configuration
-├── tests/                    # Unit and integration tests
-│   ├── app.test.ts
-│   └── user.test.ts
-├── package.json              # Backend dependencies
-├── tsconfig.json             # TypeScript configuration
-└── README.md                 # Backend documentation
+chatFriends/
+├── frontend/                 # Aplicación Next.js
+│   ├── app/                  # App Router (Next.js 13+)
+│   │   ├── api/              # API Routes
+│   │   │   ├── addFriends/   # Gestión de amigos
+│   │   │   ├── auth/         # NextAuth configuration
+│   │   │   ├── dashboard/    # Dashboard data
+│   │   │   ├── login/        # Login endpoint
+│   │   │   ├── register/     # Registration endpoint
+│   │   │   └── user/         # User management
+│   │   ├── chat/[email]/     # Rutas dinámicas de chat
+│   │   ├── dashboard/        # Dashboard principal
+│   │   ├── login/            # Página de login
+│   │   └── register/         # Página de registro
+│   ├── components/           # Componentes reutilizables
+│   │   ├── ui/               # Componentes de shadcn/ui
+│   │   └── theme-provider.tsx
+│   ├── lib/                  # Utilidades y configuración
+│   │   ├── auth.ts           # NextAuth configuration
+│   │   ├── db/               # Database models y servicios
+│   │   │   ├── models/       # Mongoose models
+│   │   │   ├── services/     # Database services
+│   │   │   └── factory/      # User factory patterns
+│   │   └── utils/            # Helper functions
+│   ├── hooks/                # Custom React hooks
+│   └── public/               # Archivos estáticos
+├── backend/                  # Backend Node.js (V3.0)
+│   ├── index.ts              # Socket.io server
+│   ├── models/               # Mongoose models
+│   └── utils/                # Backend utilities
+└── README.md
 ```
 
-```markdown
-### Scripts de Inicialización
+## 🔧 Configuración Local
 
-Para facilitar el desarrollo y la ejecución del proyecto, se han añadido scripts en los archivos `package.json` tanto del backend como del frontend. A continuación, se describen los scripts más relevantes:
+### Prerequisitos
 
-#### Backend
+- Node.js 18+
+- npm o pnpm
+- Cuenta de MongoDB Atlas
+- Cuenta de Google Cloud (para OAuth)
 
-```json
-"scripts": {
-    "start": "node dist/server.js",          // Inicia el servidor en producción
-    "dev": "ts-node-dev src/server.ts",     // Inicia el servidor en modo desarrollo
-    "build": "tsc",                         // Compila el código TypeScript a JavaScript
-    "test": "jest"                          // Ejecuta las pruebas unitarias
+### 1. Clonar el repositorio
+
+```bash
+git clone https://github.com/tu-usuario/chatFriends.git
+cd chatFriends
+```
+
+### 2. Instalar dependencias
+
+```bash
+cd frontend
+npm install
+```
+
+### 3. Configurar variables de entorno
+
+Crea un archivo `.env.local` en la carpeta `frontend/`:
+
+```env
+# MongoDB
+MONGODB_URI=your_mongodb_connection_string
+
+# NextAuth
+NEXTAUTH_SECRET=your_nextauth_secret
+NEXTAUTH_URL=http://localhost:3000
+
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+```
+
+### 4. Iniciar el servidor de desarrollo
+
+```bash
+npm run dev
+```
+
+La aplicación estará disponible en `http://localhost:3000`
+
+## 🗃️ Base de Datos
+
+### Modelos principales
+
+- **BaseUser**: Usuario base con discriminator pattern
+- **OAuthUser**: Usuario con autenticación OAuth  
+- **Campos principales**: `username`, `email`, `friends[]`, `isOnline`
+
+### Relaciones
+
+- **Amigos**: Relación bidireccional entre usuarios
+- **Mensajes**: Preparado para V3.0 con Socket.io
+
+### Estructura de datos
+
+```typescript
+interface IBaseUser {
+  username: string;
+  email: string;
+  password?: string;
+  friends: ObjectId[];
+  isOnline: boolean;
+  timestamps: true;
+}
+
+interface IOAuthUser extends IBaseUser {
+  oauthId: string;
+  oauthProvider: string;
+  profilePicture?: string;
 }
 ```
 
-#### Frontend
+## 🎮 Uso de la Aplicación
 
-```json
-"scripts": {
-    "start": "live-server",                
-    "build": "webpack --mode production",  
-    "lint": "eslint . --ext .js,.ts"        
-```
+### 1. **Registro/Login**
+- Accede con tu cuenta de Google
+- El sistema creará automáticamente tu perfil
 
-### Configuración de Entorno
+### 2. **Dashboard**
+- Ve todos tus amigos conectados
+- Navega a chats individuales
+- Estados online en tiempo real
 
-El proyecto utiliza variables de entorno para configurar aspectos clave como la conexión a la base de datos y las claves de API. Asegúrate de crear un archivo `.env` en la raíz del proyecto con las siguientes variables:
+### 3. **Añadir Amigos**
+- Busca por email
+- Sistema bidireccional automático
+- Confirmación instantánea
 
-```plaintext
-# Variables de entorno para el backend
-PORT=3000
-DB_HOST=localhost
-DB_PORT=5432
-DB_USER=your_user
-DB_PASSWORD=your_password
-DB_NAME=your_database
+### 4. **Chat Individual**
+- Navegación por URL dinámica: `/chat/email@example.com`
+- UI responsive y moderna
+- Preparado para mensajería en tiempo real (V3.0)
 
-# Variables de entorno para el frontend
-API_URL=http://localhost:3000/api
-```
+## 🔄 Roadmap
 
-Recuerda no incluir el archivo `.env` en el control de versiones. Añade una entrada en el archivo `.gitignore` para evitar que se suba al repositorio.
+### ✅ V1.0 - Autenticación
+- [x] Sistema de login/registro
+- [x] OAuth con Google
+- [x] Gestión de sesiones
 
-### Pruebas
+### ✅ V2.0 - Sistema de Amigos (Actual)
+- [x] Dashboard funcional
+- [x] Añadir/gestionar amigos
+- [x] Rutas dinámicas de chat
+- [x] Estados online
+- [x] UI moderna con Tailwind
 
-El proyecto incluye pruebas unitarias y de integración para garantizar la calidad del código. Las pruebas se encuentran en la carpeta `tests` del backend y se ejecutan con el comando:
+### 🚧 V3.0 - Mensajería en Tiempo Real
+- [ ] Socket.io integración
+- [ ] Mensajes persistentes
+- [ ] Notificaciones push
+- [ ] Indicadores de lectura
 
-```bash
-npm run test
-```
+### 🔮 V4.0 - Características Avanzadas
+- [ ] Archivos y multimedia
+- [ ] Grupos de chat
+- [ ] Búsqueda de mensajes
+- [ ] Temas personalizables
 
-Asegúrate de que las pruebas pasen antes de realizar un despliegue en producción.
+## 🤝 Contribución
 
-### Despliegue
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/nueva-caracteristica`)
+3. Commit tus cambios (`git commit -m 'Añadir nueva característica'`)
+4. Push a la rama (`git push origin feature/nueva-caracteristica`)
+5. Abre un Pull Request
 
-Para desplegar el proyecto en un entorno de producción, sigue estos pasos:
+## 📝 Licencia
 
-1. Compila el código del backend y del frontend:
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-     ```bash
-     cd backend && npm run build
-     cd ../frontend && npm run build
-     ```
+## 👨‍💻 Autor
 
-2. Configura un servidor web (por ejemplo, Nginx o Apache) para servir los archivos del frontend y redirigir las solicitudes API al backend.
+**Manuel Dev** - [LinkedIn](https://linkedin.com/in/tu-perfil) - [GitHub](https://github.com/tu-usuario)
 
-3. Asegúrate de configurar correctamente las variables de entorno en el servidor de producción.
+## 🙏 Agradecimientos
 
-4. Inicia el servidor del backend:
+- [Next.js](https://nextjs.org/) por el increíble framework
+- [Tailwind CSS](https://tailwindcss.com/) por los estilos utility-first
+- [shadcn/ui](https://ui.shadcn.com/) por los componentes hermosos
+- [NextAuth.js](https://next-auth.js.org/) por la autenticación segura
+- [MongoDB](https://www.mongodb.com/) por la base de datos flexible
+- [Vercel](https://vercel.com/) por el hosting y deployment
 
-     ```bash
-     npm start
-     ```
+---
 
-Con estos pasos, el proyecto estará listo para ser utilizado en un entorno de producción.
-
-```plaintext
-```
-```
-## Frontend
-
-```plaintext
-frontend/
-├── app/                      # Next.js app directory
-│   ├── globals.css           # Global styles
-│   ├── layout.tsx            # Root layout component
-│   ├── page.tsx              # Home page
-│   ├── api/                  # API routes
-│   ├── chat/                 # Chat feature pages
-│   ├── login/                # Login page
-│   └── register/             # Registration page
-├── components/               # Reusable UI components
-├── hooks/                    # Custom React hooks
-├── lib/                      # Utility libraries
-├── public/                   # Static assets
-├── styles/                   # Additional styles
-├── components.json           # Component configuration
-├── next.config.mjs           # Next.js configuration
-├── package.json              # Frontend dependencies
-├── tailwind.config.ts        # Tailwind CSS configuration
-└── tsconfig.json             # TypeScript configuration
-```
+⭐ **¡Dale una estrella al proyecto si te ha gustado!**

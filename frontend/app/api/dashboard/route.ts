@@ -1,8 +1,9 @@
 import { getFriends } from "@/lib/utils/getFriends";
-import { setUserOnline } from "@/lib/utils/userOnline";
+import { updateUserStatus } from "@/lib/utils/updateUserStatus";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+
 
 export async function GET(request: Request) {
   try {
@@ -21,10 +22,10 @@ export async function GET(request: Request) {
     }
 
     try {
-      await setUserOnline(userId);
+      await updateUserStatus(userId, true);
     } catch (err) {
       console.error("❌ Error setting user online:", err);
-      return NextResponse.json({ error: "Error setting user online" }, { status: 500 });
+      // Continuar y devolver los amigos aunque falle el update de estado
     }
 
     return NextResponse.json({ friends }, { status: 200 });
