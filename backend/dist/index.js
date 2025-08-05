@@ -18,7 +18,7 @@ const httpServer = (0, http_1.createServer)(app);
 // Configurar Socket.io
 const io = new socket_io_1.Server(httpServer, {
     cors: {
-        origin: "http://localhost:3000", // Tu frontend
+        origin: "https://chat-friends-alpha.vercel.app", // Tu frontend
         methods: ["GET", "POST"],
     },
 });
@@ -30,6 +30,9 @@ const io = new socket_io_1.Server(httpServer, {
     .catch((error) => {
     console.error("❌ Error connecting to the database:", error);
     process.exit(1);
+});
+app.get("/", (req, res) => {
+    res.send("👋 Welcome to the Chat Server!");
 });
 // Socket.io eventos
 io.on("connection", async (socket) => {
@@ -202,8 +205,8 @@ io.on("connection", async (socket) => {
     });
 });
 // Iniciar servidor
-const PORT = 4000; // Puerto diferente al frontend
-const HOST = process.env.HOST || 'localhost';
+const PORT = process.env.PORT || 4000; // Puerto diferente al frontend
+const HOST = process.env.HOST || '0.0.0.0';
 httpServer.listen(PORT, () => {
     console.log(`🚀 Socket.io server running on http://${HOST}:${PORT}`);
     console.log(`📡 WebSocket endpoint: ws://${HOST}:${PORT}/socket.io/`);
