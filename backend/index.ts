@@ -242,8 +242,8 @@ io.on("connection", async (socket) => {
 });
 
 // Iniciar servidor
-const PORT =  4000; // Puerto diferente al frontend
-const HOST = process.env.HOST || 'localhost';
+const PORT =  process.env.PORT || 4000; // Puerto diferente al frontend
+const HOST = process.env.HOST || '0.0.0.0';
 
 httpServer.listen(PORT, () => {
   console.log(`🚀 Socket.io server running on http://${HOST}:${PORT}`);
