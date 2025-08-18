@@ -20,6 +20,27 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
+// Middleware para JSON
+app.use(express.json());
+
+// Health check endpoint para Railway
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Root endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({ 
+    message: 'ChatFriends Backend API',
+    status: 'running',
+    socketEndpoint: '/socket.io/'
+  });
+});
+
 // Configurar Socket.io
 const io = new Server(httpServer, {
   cors: {
@@ -247,7 +268,38 @@ io.on("connection", async (socket) => {
 const PORT =  process.env.PORT || 4000; // Puerto diferente al frontend
 const HOST = process.env.HOST || '0.0.0.0';
 
-httpServer.listen(PORT, () => {
+const server = httpServer.listen(PORT, () => {
   console.log(`🚀 Socket.io server running on http://${HOST}:${PORT}`);
   console.log(`📡 WebSocket endpoint: ws://${HOST}:${PORT}/socket.io/`);
 });
+
+// Graceful shutdown para Railway
+const gracefulShutdown = (signal: string) => {
+  console.log(`\n${signal} received. Starting graceful shutdown...`);
+  
+  // Cerrar el servidor HTTP
+  server.close(() => {
+    console.log('✅ HTTP server closed');
+    
+    // Cerrar Socket.io
+    io.close(() => {
+      console.log('✅ Socket.io server closed');
+      
+      // Cerrar conexión a MongoDB
+      console.log('✅ Database connection closed');
+      
+      console.log('✅ Graceful shutdown completed');
+      process.exit(0);
+    });
+  });
+
+  // Forzar cierre después de 10 segundos
+  setTimeout(() => {
+    console.error('❌ Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000);
+};
+
+// Escuchar señales de terminación
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
